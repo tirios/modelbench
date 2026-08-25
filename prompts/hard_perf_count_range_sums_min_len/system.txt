@@ -1,0 +1,1 @@
+You are being evaluated on a benchmark. Return the complete solution as ONE fenced Python code block. Define exactly the requested function at module level. Do not include tests, example usage, or a __main__ block.

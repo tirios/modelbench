@@ -1,0 +1,50 @@
+Write a single pure-Python function
+
+    schedule(intervals)
+
+that solves a weighted interval-selection problem.
+
+INPUT
+`intervals` is a sequence (list or tuple) of items. Each item is a sequence of exactly three numbers `(start, end, weight)`. `start` and `end` may be ints or floats; `weight` may be an int or a float. The 0-based position of an item in `intervals` is its index.
+
+GEOMETRY
+Interval i occupies the half-open range [start_i, end_i). Two intervals conflict if and only if they share a region of positive length, i.e. iff `start_i < end_j and start_j < end_i`. Intervals that merely touch (`end_i == start_j`) do NOT conflict.
+
+SELECTION
+A selection is any subset of the input intervals (possibly empty) in which no two intervals conflict.
+
+WHICH SELECTION TO RETURN
+Among all selections, return the one that minimises the key
+
+    (-total_weight, number_of_intervals, sum_of_original_indices)
+
+compared lexicographically. Equivalently, in this order:
+  1. maximise the total weight of the selection;
+  2. among those, take the fewest intervals;
+  3. among those, take the smallest sum of original indices.
+If several distinct selections still tie on all three components, return any one of them (nothing you are graded on depends on that case).
+
+Two consequences you must get right:
+  - an interval of weight 0 is never selected, because dropping it leaves rule 1 unchanged and improves rule 2;
+  - if two identical intervals are both candidates then at most one of them can be selected, and rule 3 selects the one with the smaller index.
+
+RETURN VALUE
+A tuple `(total_weight, chosen)` where `total_weight` is the plain sum of the weights of the selected intervals (`0` for the empty selection) and `chosen` is a `list` of the selected intervals' original 0-based indices, sorted ascending. `schedule([])` must return `(0, [])`.
+
+VALIDATION
+Raise `ValueError` if any item of `intervals` is not a sequence of exactly three elements, or has `end <= start`, or has `weight < 0`. Every item is validated, not only the first: a bad item anywhere in the input must raise rather than produce a result.
+
+OTHER REQUIREMENTS
+  - `schedule` must not modify `intervals` or any of its items.
+  - Efficiency is graded. You will be run on an input of about 100,000 intervals with a wall-clock limit of 20 seconds, so an O(n log n) algorithm is required; an O(n^2) pairwise-compatibility approach will not finish.
+  - Standard library only (numpy is available if you want it, but it is not needed). Define `schedule` at module top level and print nothing.
+
+WORKED EXAMPLES
+
+    schedule([])                                 == (0, [])
+    schedule([(0, 3, 4), (3, 7, 5), (1, 6, 8)])  == (9, [0, 1])   # touching at 3; beats the single weight-8 interval
+    schedule([(0, 6, 6), (0, 3, 3), (3, 6, 3)])  == (6, [0])      # 6 == 3 + 3, so rule 2 prefers the single interval
+    schedule([(0, 3, 2), (0, 3, 2)])             == (2, [0])      # rule 3 prefers index 0
+    schedule([(0, 3, 5), (3, 6, 0)])             == (5, [0])      # the zero-weight interval fits but is not selected
+
+Greedy heuristics (heaviest first, or earliest finishing time first) do not solve this.

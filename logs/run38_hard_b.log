@@ -1,0 +1,7 @@
+[1/5] hard_errors_allocate_spec ... score 0.00 32000 tok @ 97.94 tok/s ttft 1.672s TRUNCATED think 33799c (0/14 checks | exception_hierarchy: Assertion)
+[2/5] hard_numeric_log_domain_weighted_quantile ... score 0.00 22872 tok @ 86.88 tok/s ttft 1.743s think 59376c (0/14 checks | lse_basic: NameError: name 'lo)
+[3/5] hard_parse ... score 0.00 32000 tok @ 86.82 tok/s ttft 1.722s TRUNCATED think 79065c (0/14 checks | basic: NameError: name 'parse_)
+[4/5] hard_perf_count_range_sums_min_len ... score 1.00 13567 tok @ 81.8 tok/s ttft 1.615s think 43226c (13/13 checks)
+[5/5] hard_refactor ... score 0.00 32000 tok @ 87.53 tok/s ttft 1.719s TRUNCATED think 120482c (0/14 checks | registry_shape: AssertionError)
+
+5/5 completed, mean score 0.200, wall 1501s -> results_hard_qwen38_b.json

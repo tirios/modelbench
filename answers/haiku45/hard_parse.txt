@@ -1,0 +1,272 @@
+```python
+import re
+
+def parse_records(text):
+    if not isinstance(text, str):
+        raise TypeError
+
+    lines = text.split('\n')
+    records_dict = {}
+    records_order = []
+    errors = []
+
+    for line_num, line in enumerate(lines, 1):
+        if line.endswith('\r'):
+            line = line[:-1]
+
+        if not line or line.isspace():
+            continue
+
+        stripped = line.lstrip(' \t')
+        if not stripped or stripped[0] == '#':
+            continue
+
+        fields, scan_error = _scan_fields(line)
+        if scan_error:
+            errors.append((line_num, 'BAD_QUOTE'))
+            continue
+
+        if len(fields) not in (3, 4):
+            errors.append((line_num, 'FIELD_COUNT'))
+            continue
+
+        record_id = fields[0]
+        if not record_id or record_id.isspace():
+            errors.append((line_num, 'BAD_ID'))
+            continue
+
+        date_str, date_error = _parse_date(fields[1])
+        if date_error:
+            errors.append((line_num, 'BAD_DATE'))
+            continue
+
+        amount, amount_error = _parse_amount(fields[2])
+        if amount_error:
+            errors.append((line_num, 'BAD_AMOUNT'))
+            continue
+
+        note = fields[3] if len(fields) == 4 else ''
+
+        record = {
+            'id': record_id,
+            'date': date_str,
+            'amount': amount,
+            'note': note
+        }
+
+        if record_id not in records_dict:
+            records_dict[record_id] = record
+            records_order.append(record_id)
+        else:
+            records_dict[record_id] = record
+
+    final_records = [records_dict[rid] for rid in records_order]
+    errors.sort(key=lambda x: x[0])
+
+    return final_records, errors
+
+def _scan_fields(line):
+    fields = []
+    i = 0
+    at_field_start = True
+
+    while True:
+        while i < len(line) and line[i] in ' \t':
+            i += 1
+
+        if i >= len(line):
+            break
+
+        if line[i] == '"':
+            i += 1
+            field = []
+            while i < len(line):
+                if line[i] == '"':
+                    if i + 1 < len(line) and line[i + 1] == '"':
+                        field.append('"')
+                        i += 2
+                    else:
+                        i += 1
+                        break
+                else:
+                    field.append(line[i])
+                    i += 1
+            else:
+                return None, 'BAD_QUOTE'
+
+            fields.append(''.join(field))
+
+            while i < len(line) and line[i] in ' \t':
+                i += 1
+
+            if i < len(line) and line[i] != ',':
+                return None, 'BAD_QUOTE'
+
+            at_field_start = False
+
+            if i < len(line) and line[i] == ',':
+                i += 1
+                at_field_start = True
+            else:
+                break
+        else:
+            field_start = i
+            while i < len(line) and line[i] != ',':
+                i += 1
+
+            field = line[field_start:i].strip(' \t')
+            fields.append(field)
+
+            at_field_start = False
+
+            if i < len(line) and line[i] == ',':
+                i += 1
+                at_field_start = True
+            else:
+                break
+
+    if at_field_start:
+        fields.append('')
+
+    return fields, None
+
+def _parse_date(date_str):
+    date_str = date_str.strip(' \t')
+
+    if len(date_str) == 10 and date_str[4] == '-' and date_str[7] == '-':
+        try:
+            year, month, day = int(date_str[0:4]), int(date_str[5:7]), int(date_str[8:10])
+            if _is_valid_date(year, month, day):
+                return f'{year:04d}-{month:02d}-{day:02d}', None
+        except ValueError:
+            pass
+
+    if '/' in date_str:
+        parts = date_str.split('/')
+        if len(parts) == 3:
+            try:
+                a, b = int(parts[0]), int(parts[1])
+                year = int(parts[2])
+                if len(parts[2]) == 4:
+                    if _is_valid_date(year, b, a):
+                        return f'{year:04d}-{b:02d}-{a:02d}', None
+                    if _is_valid_date(year, a, b):
+                        return f'{year:04d}-{a:02d}-{b:02d}', None
+            except ValueError:
+                pass
+
+    match = re.match(r'^(\d{1,2}) +([a-zA-Z]{3}) +(\d{4})$', date_str)
+    if match:
+        day_str, month_str, year_str = match.groups()
+        try:
+            day = int(day_str)
+            year = int(year_str)
+            month_map = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+                        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
+            month = month_map.get(month_str.lower())
+            if month is not None and _is_valid_date(year, month, day):
+                return f'{year:04d}-{month:02d}-{day:02d}', None
+        except ValueError:
+            pass
+
+    return None, 'BAD_DATE'
+
+def _is_valid_date(year, month, day):
+    if year < 1000 or year > 9999 or month < 1 or month > 12:
+        return False
+
+    days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
+        days_in_month[1] = 29
+
+    return 1 <= day <= days_in_month[month - 1]
+
+def _parse_amount(amount_str):
+    s = amount_str.strip(' \t')
+
+    if not s:
+        return None, 'BAD_AMOUNT'
+
+    has_parens = False
+    if len(s) >= 2 and s[0] == '(' and s[-1] == ')':
+        has_parens = True
+        s = s[1:-1].strip(' \t')
+    elif s[0] == '(' or s[-1] == ')':
+        return None, 'BAD_AMOUNT'
+
+    sign_is_negative = False
+    if s and s[0] in '+-':
+        if has_parens:
+            return None, 'BAD_AMOUNT'
+        sign_is_negative = (s[0] == '-')
+        s = s[1:]
+
+    if s and s[0] == '$':
+        s = s[1:]
+
+    is_percentage = False
+    if s and s[-1] == '%':
+        is_percentage = True
+        s = s[:-1]
+
+    if not s or any(c not in '0123456789,.' for c in s):
+        return None, 'BAD_AMOUNT'
+
+    last_comma, last_dot = s.rfind(','), s.rfind('.')
+    decimal_sep = grouping_sep = None
+
+    if last_comma >= 0 and last_dot >= 0:
+        if last_comma > last_dot:
+            decimal_sep, grouping_sep = ',', '.'
+        else:
+            decimal_sep, grouping_sep = '.', ','
+    elif last_comma >= 0:
+        if _is_grouping_only(s, ','):
+            grouping_sep = ','
+        else:
+            decimal_sep = ','
+    elif last_dot >= 0:
+        if s.count('.') >= 2:
+            grouping_sep = '.'
+        else:
+            decimal_sep = '.'
+
+    if decimal_sep:
+        parts = s.split(decimal_sep)
+        if len(parts) != 2:
+            return None, 'BAD_AMOUNT'
+        int_part, frac_part = parts
+        if not frac_part or not frac_part.isdigit():
+            return None, 'BAD_AMOUNT'
+    else:
+        int_part, frac_part = s, ''
+
+    if grouping_sep:
+        int_parts = int_part.split(grouping_sep)
+        if len(int_parts) < 2 or not (1 <= len(int_parts[0]) <= 3 and int_parts[0].isdigit()):
+            return None, 'BAD_AMOUNT'
+        for part in int_parts[1:]:
+            if len(part) != 3 or not part.isdigit():
+                return None, 'BAD_AMOUNT'
+        int_part = ''.join(int_parts)
+    else:
+        if not int_part or not int_part.isdigit():
+            return None, 'BAD_AMOUNT'
+
+    value = float(int_part + ('.' + frac_part if frac_part else '.0'))
+    if is_percentage:
+        value /= 100
+    if has_parens or sign_is_negative:
+        value = -value
+
+    return value, None
+
+def _is_grouping_only(s, sep):
+    parts = s.split(sep)
+    if len(parts) < 2 or not (1 <= len(parts[0]) <= 3 and parts[0].isdigit()):
+        return False
+    for part in parts[1:]:
+        if len(part) != 3 or not part.isdigit():
+            return False
+    return True
+```

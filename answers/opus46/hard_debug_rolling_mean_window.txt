@@ -1,0 +1,56 @@
+```python
+import math
+
+
+def rolling_mean(times, values, width, min_count=1):
+    """Trailing rolling mean over a time window."""
+    n = len(times)
+    if n != len(values):
+        raise ValueError("times and values must have the same length")
+    if not (math.isfinite(width) and width > 0):
+        raise ValueError("width must be a finite positive number")
+    if min_count < 1:
+        raise ValueError("min_count must be >= 1")
+    for k in range(1, n):
+        if not (times[k] > times[k - 1]):
+            raise ValueError("times must be strictly increasing")
+
+    # Shewchuk non-overlapping partials for an exact incremental running sum.
+    # Each _add merges one value into the partial-sum list using fast-two-sum,
+    # preserving the invariant that the infinite-precision sum of the partials
+    # equals the infinite-precision sum of every value ever passed to _add.
+    # Subtraction is just _add(-x).  The list size is bounded by the number of
+    # distinct IEEE 754 exponent bands touched (~30-70 in practice).
+    partials = []
+
+    def _add(x):
+        idx = 0
+        for y in partials:
+            if abs(x) < abs(y):
+                x, y = y, x
+            hi = x + y
+            err = y - (hi - x)
+            if err:
+                partials[idx] = err
+                idx += 1
+            x = hi
+        partials[idx:] = [x]
+
+    out = []
+    left = 0
+    for i in range(n):
+        _add(values[i])
+        # Evict points on or beyond the open boundary.
+        # Guard left < i so point i is never evicted from its own window
+        # (protects against the edge case where floating-point rounding
+        # makes times[i] - width == times[i]).
+        while left < i and times[left] <= times[i] - width:
+            _add(-values[left])
+            left += 1
+        count = i - left + 1
+        if count < min_count:
+            out.append(None)
+        else:
+            out.append(math.fsum(partials) / count)
+    return out
+```

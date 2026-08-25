@@ -1,0 +1,11 @@
+The 95% CI is [-0.002, 0.014], which contains 0.
+
+(a) is the classic frequentist misinterpretation: the true difference is a fixed (though unknown) quantity, not a random variable, so it doesn't have a "95% probability" of lying anywhere. The 95% refers to the long-run performance of the interval-construction procedure, not a probability statement about this particular fixed parameter given this particular interval. Incorrect.
+
+(c) is wrong because the interval merely contains zero among many plausible values; nothing establishes the true difference equals exactly zero.
+
+(d) is wrong because "necessarily" is too strong — a larger sample tends to reduce the standard error on average, but any specific larger sample could by chance yield a similar or even wider interval.
+
+(b) is correct: a 95% CI and a two-sided hypothesis test at the 5% significance level are duals. Because the interval includes 0 (the "no difference" value), a test of H0: difference = 0 would fail to reject at alpha = 0.05 — i.e., the data are compatible with no difference at the 5% level.
+
+ANSWER: b

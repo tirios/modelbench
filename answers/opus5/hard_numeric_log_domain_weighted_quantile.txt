@@ -1,0 +1,146 @@
+```python
+import math
+
+import numpy as np
+
+_NEG_INF = float("-inf")
+_POS_INF = float("inf")
+
+
+def _to_float_array(seq, name):
+    """Convert a sequence of reals to a 1-D float64 array, ValueError on failure."""
+    try:
+        arr = np.asarray(seq, dtype=np.float64)
+    except Exception:
+        raise ValueError("%s must be a sequence of real numbers" % name)
+    if arr.ndim == 0:
+        arr = arr.reshape(1)
+    elif arr.ndim > 1:
+        arr = arr.ravel()
+    return arr
+
+
+def log_sum_exp(xs):
+    """Numerically stable log(sum(exp(x))) over a sequence of reals.
+
+    Empty input, or input that is entirely -inf, returns -inf. NaN or +inf
+    entries raise ValueError.
+    """
+    arr = _to_float_array(xs, "xs")
+
+    if arr.size:
+        if np.isnan(arr).any():
+            raise ValueError("log_sum_exp: NaN entry")
+        if np.any(arr == _POS_INF):
+            raise ValueError("log_sum_exp: +inf entry")
+    else:
+        return _NEG_INF
+
+    m = float(arr.max())
+    if m == _NEG_INF:
+        # every entry is -inf
+        return _NEG_INF
+
+    # Shifting by the maximum guarantees the largest term is exp(0) == 1, so the
+    # sum lies in [1, n]: no overflow to +inf and no underflow of the total to 0.
+    with np.errstate(under="ignore", over="ignore"):
+        total = float(np.exp(arr - m).sum())
+
+    return float(m + math.log(total))
+
+
+def weighted_quantile(values, log_weights, qs):
+    """Weighted quantiles with weights supplied in the log domain.
+
+    Returns a list of Python floats, one per entry of `qs`, in the given order.
+    """
+    vals = _to_float_array(values, "values")
+    lws = _to_float_array(log_weights, "log_weights")
+    qarr = _to_float_array(qs, "qs")
+
+    # ---- validation, before any computation -------------------------------
+    # V1: matching lengths
+    if vals.size != lws.size:
+        raise ValueError("values and log_weights must have the same length")
+
+    # V2: values must all be finite
+    if vals.size and not np.all(np.isfinite(vals)):
+        raise ValueError("values must be finite (no NaN or +/-inf)")
+
+    # V3: log weights may be -inf but not NaN or +inf
+    if lws.size:
+        if np.isnan(lws).any():
+            raise ValueError("log_weights must not contain NaN")
+        if np.any(lws == _POS_INF):
+            raise ValueError("log_weights must not contain +inf")
+
+    # V4: probabilities must be in [0, 1]
+    if qarr.size:
+        if np.isnan(qarr).any():
+            raise ValueError("qs must not contain NaN")
+        if np.any(qarr < 0.0) or np.any(qarr > 1.0):
+            raise ValueError("qs must lie in [0, 1]")
+
+    # V5: at least one finite log weight
+    finite_mask = lws != _NEG_INF
+    if vals.size == 0 or not bool(finite_mask.any()):
+        raise ValueError("at least one log weight must be finite")
+
+    n_q = int(qarr.size)
+    if n_q == 0:
+        return []
+
+    # ---- A1: drop zero (i.e. -inf log) weights ----------------------------
+    v_keep = vals[finite_mask]
+    l_keep = lws[finite_mask]
+
+    # ---- A2: shift by the max, drop entries that underflow to exactly 0 ----
+    L = float(l_keep.max())
+    with np.errstate(under="ignore", over="ignore"):
+        t = np.exp(l_keep - L)
+    alive = t > 0.0
+    v_keep = v_keep[alive]
+    t = t[alive]
+
+    # ---- A3: normalise ----------------------------------------------------
+    Z = float(t.sum())
+    w = t / Z
+
+    # ---- A4: merge equal values, ascending --------------------------------
+    u, inv = np.unique(v_keep, return_inverse=True)
+    inv = np.asarray(inv).ravel()
+    m = int(u.size)
+    v = np.bincount(inv, weights=w, minlength=m)
+
+    # ---- A5: single distinct value ----------------------------------------
+    if m == 1:
+        return [float(u[0])] * n_q
+
+    # ---- A6: mid-mass positions rescaled to [0, 1] ------------------------
+    C = np.cumsum(v)
+    p = C - v / 2.0
+    span = float(p[-1] - p[0])          # == 1 - (v_1 + v_m)/2 >= 1/2
+    h = (p - p[0]) / span
+    h[0] = 0.0
+    h[-1] = 1.0
+
+    # ---- A7: piecewise-linear lookup, O(Q log m) --------------------------
+    idx = np.searchsorted(h, qarr, side="right") - 1
+    np.clip(idx, 0, m - 2, out=idx)
+
+    h_lo = h[idx]
+    h_hi = h[idx + 1]
+    u_lo = u[idx]
+    u_hi = u[idx + 1]
+
+    den = h_hi - h_lo
+    safe_den = np.where(den > 0.0, den, 1.0)
+    out = u_lo + (qarr - h_lo) * (u_hi - u_lo) / safe_den
+    out = np.where(den > 0.0, out, u_lo)
+
+    # clamp the ends exactly
+    out = np.where(qarr <= 0.0, u[0], out)
+    out = np.where(qarr >= 1.0, u[-1], out)
+
+    return [float(x) for x in out]
+```

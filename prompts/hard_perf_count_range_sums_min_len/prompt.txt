@@ -1,0 +1,68 @@
+Write a single Python function:
+
+    def count_range_sums(nums, lo, hi, min_len=1):
+
+It returns the number of index pairs (i, j) with 0 <= i <= j < len(nums) such that BOTH:
+  * the subarray length is at least min_len, i.e. (j - i + 1) >= min_len, and
+  * lo <= sum(nums[i:j+1]) <= hi, with BOTH bounds INCLUSIVE.
+
+Contract (items 1-4 are checked directly):
+
+1. Arguments
+   - `nums` is a sequence of Python ints (a list or a tuple). Values may be negative,
+     zero or positive, so prefix sums are NOT monotone.
+   - `lo` and `hi` are ints.
+   - `min_len` is an int, default 1.
+
+2. Edge-case behaviour
+   - If `min_len < 1`, raise `ValueError`. This check happens FIRST: it must raise even
+     when `nums` is empty and even when `lo > hi`.
+   - If `lo > hi`, return 0.
+   - If `len(nums) == 0`, return 0.
+   - If `min_len > len(nums)`, return 0.
+   - Only non-empty subarrays are counted (a subarray always has length >= 1).
+   - The function must NOT modify `nums`, and must work when `nums` is a tuple.
+     Calling it twice with the same argument must give the same answer.
+
+3. Return value
+   - Return an exact Python `int`: `type(result) is int` must be True. Do not return a
+     numpy integer, a float, or anything else.
+   - The count can exceed 2**31 (up to roughly 2 * 10**10 for the sizes tested), so
+     32-bit accumulators overflow. All arithmetic must be exact.
+
+4. Complexity requirement (this is the point of the task)
+   - Your solution must run in O(n log n) time or better, where n = len(nums).
+     A double loop over all O(n^2) subarrays WILL time out and score zero on the
+     large checks.
+   - The tests include several calls with n = 200000, each with a budget of
+     15.0 seconds of wall-clock time per call, measured on a typical laptop CPU.
+     A Fenwick/BIT solution runs in well under a second; even a plain sorted-list
+     solution finishes in a couple of seconds. If one of those large calls overruns
+     its budget it cannot be stopped, so the remaining large calls are not attempted
+     and they count as failures too.
+   - Note that `min_len` interacts with the counting: for a right endpoint you may only
+     pair left endpoints that are at least `min_len` positions back. A textbook
+     merge-sort "count of range sum" routine does not handle that constraint for free;
+     an incremental structure (Fenwick/BIT or similar over compressed prefix values,
+     inserting each left endpoint only once it becomes eligible) does.
+
+5. Environment
+   - Standard library plus numpy only. No other third-party imports, no file or network
+     access, no printing. Module-level code must not do heavy work.
+
+Value ranges used by the tests: len(nums) <= 200000, |nums[k]| <= 10**9,
+|lo| <= 10**15, |hi| <= 10**15, min_len <= 10**9.
+
+Worked examples:
+
+    count_range_sums([-2, 5, -1], -2, 2)        == 3    # sums -2, 2, -1 qualify
+    count_range_sums([1, 2, 3], 3, 3)           == 2    # [1,2] and [3]
+    count_range_sums([1, 2, 3], 1, 6)           == 6    # all six subarrays, bounds inclusive
+    count_range_sums([1, 1, 1, 1], 2, 3, 2)     == 5    # three of sum 2, two of sum 3
+    count_range_sums([0, 0, 0], 0, 0)           == 6
+    count_range_sums([1, 2, 3], 0, 10, 4)       == 0    # min_len exceeds len(nums)
+    count_range_sums([1, 2, 3], 5, 1)           == 0    # lo > hi
+    count_range_sums([], 0, 0)                  == 0
+    count_range_sums([1, 2, 3], 0, 10, 0)       -> raises ValueError
+
+Define the function at module top level under exactly that name.

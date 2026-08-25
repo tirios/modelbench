@@ -1,0 +1,11 @@
+Free-stream dynamic pressure:
+
+q = 0.5 * rho * v^2 = 0.5 * 1.19 * 13.0^2 = 0.5 * 1.19 * 169 = 100.555 Pa
+
+Rearranging D = q * CdA:
+
+CdA = D / q = 21.4 / 100.555 = 0.21282 m^2
+
+To three decimal places, CdA = 0.213 m^2.
+
+ANSWER: 0.213

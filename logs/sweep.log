@@ -1,0 +1,26 @@
+
+=== 8192 ===
+  YYYY  load 9.9s  vramfree 4912MiB short 106.74tps  ptok 6002 prefill 2.804s  needles 1.0
+
+=== 16384 ===
+  YYYY  load 9.7s  vramfree 4376MiB short 103.09tps  ptok 11682 prefill 5.092s  needles 1.0
+
+=== 24576 ===
+  YYYY  load 9.8s  vramfree 3816MiB short 104.89tps  ptok 17328 prefill 7.45s  needles 1.0
+
+=== 32768 ===
+  YYYY  load 9.7s  vramfree 3256MiB short 104.61tps  ptok 22998 prefill 9.84s  needles 1.0
+
+=== 49152 ===
+  YYYY  load 9.8s  vramfree 2136MiB short 104.24tps  ptok 34486 prefill 15.025s  needles 1.0
+
+=== 65536 ===
+  YYYY  load 9.7s  vramfree 1046MiB short 106.15tps  ptok 46083 prefill 20.775s  needles 1.0
+
+=== 98304 ===
+  Y.YY  load 10.7s  vramfree 52MiB short 103.88tps  ptok 69528 prefill 34.885s  needles 1.0
+
+=== 131072 ===
+  YY.Y  load 10.8s  vramfree 207MiB short 21.92tps  ptok 93004 prefill 1457.761s  needles 1.0
+
+=== 196608 ===

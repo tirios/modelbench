@@ -1,0 +1,75 @@
+```python
+from bisect import bisect_right
+
+
+def schedule(intervals):
+    validated = []
+    for pos, item in enumerate(intervals):
+        try:
+            parts = list(item)
+        except TypeError:
+            raise ValueError(f"intervals[{pos}] is not a sequence")
+        if len(parts) != 3:
+            raise ValueError(f"intervals[{pos}] does not have exactly three elements")
+        start, end, weight = parts
+        if end <= start:
+            raise ValueError(f"intervals[{pos}] has end <= start")
+        if weight < 0:
+            raise ValueError(f"intervals[{pos}] has negative weight")
+        validated.append((start, end, weight, pos))
+
+    m = len(validated)
+    if m == 0:
+        return (0, [])
+
+    order = sorted(range(m), key=lambda t: validated[t][1])
+    starts = [validated[t][0] for t in order]
+    ends = [validated[t][1] for t in order]
+    weights = [validated[t][2] for t in order]
+    orig_idx = [validated[t][3] for t in order]
+
+    # p[i] = number of end-sorted intervals compatible with sorted-position i
+    # (those j with ends[j] <= starts[i]); since the array is sorted by end and
+    # starts[i] < ends[i], these always form a contiguous prefix 0..p[i]-1.
+    p = [bisect_right(ends, starts[i]) for i in range(m)]
+
+    dp_w = [0] * (m + 1)
+    dp_c = [0] * (m + 1)
+    dp_s = [0] * (m + 1)
+    take = [False] * (m + 1)
+
+    for k in range(1, m + 1):
+        i = k - 1
+        j = p[i]
+        take_w = dp_w[j] + weights[i]
+        take_c = dp_c[j] + 1
+        take_s = dp_s[j] + orig_idx[i]
+        skip_w = dp_w[k - 1]
+        skip_c = dp_c[k - 1]
+        skip_s = dp_s[k - 1]
+        # Lexicographic key: maximise weight, then minimise count, then
+        # minimise sum of original indices -> compare (-weight, count, sum).
+        if (-take_w, take_c, take_s) < (-skip_w, skip_c, skip_s):
+            dp_w[k] = take_w
+            dp_c[k] = take_c
+            dp_s[k] = take_s
+            take[k] = True
+        else:
+            dp_w[k] = skip_w
+            dp_c[k] = skip_c
+            dp_s[k] = skip_s
+            take[k] = False
+
+    chosen = []
+    k = m
+    while k > 0:
+        if take[k]:
+            i = k - 1
+            chosen.append(orig_idx[i])
+            k = p[i]
+        else:
+            k -= 1
+
+    chosen.sort()
+    return (dp_w[m], chosen)
+```

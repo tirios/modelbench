@@ -1,0 +1,138 @@
+from fractions import Fraction
+import re
+import math
+
+class SpecError(Exception):
+    pass
+
+class SpecTypeError(SpecError, TypeError):
+    pass
+
+class SpecSyntaxError(SpecError, ValueError):
+    pass
+
+class SpecValueError(SpecError, ValueError):
+    pass
+
+class DuplicateNameError(SpecValueError):
+    pass
+
+class CapacityError(SpecError, ValueError):
+    pass
+
+def allocate(spec, capacity):
+    # Validation 1: spec must be a string
+    if not isinstance(spec, str):
+        err = SpecTypeError()
+        err.index = None
+        err.argname = 'spec'
+        raise err
+
+    # Validation 2: capacity must be a non-bool int
+    if isinstance(capacity, bool) or not isinstance(capacity, int):
+        err = SpecTypeError()
+        err.index = None
+        err.argname = 'capacity'
+        raise err
+
+    # Validation 3: capacity must be non-negative
+    if capacity < 0:
+        err = CapacityError()
+        err.index = None
+        raise err
+
+    # Empty spec returns empty dict
+    if spec.strip() == '':
+        return {}
+
+    # Parse entries
+    entries = spec.split(',')
+    names_order = []
+    weights = {}
+
+    for idx, entry in enumerate(entries):
+        # Check for exactly one '='
+        if entry.count('=') != 1:
+            err = SpecSyntaxError()
+            err.index = idx
+            raise err
+
+        # Split and strip
+        name_part, weight_part = entry.split('=')
+        name = name_part.strip()
+        weight_str = weight_part.strip()
+
+        # Check name format: [A-Za-z_][A-Za-z0-9_]*
+        if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name):
+            err = SpecSyntaxError()
+            err.index = idx
+            raise err
+
+        # Parse weight as float
+        try:
+            weight_float = float(weight_str)
+        except ValueError:
+            err = SpecSyntaxError()
+            err.index = idx
+            raise err
+
+        # Check for NaN and infinity
+        if math.isnan(weight_float) or math.isinf(weight_float):
+            err = SpecValueError()
+            err.index = idx
+            raise err
+
+        # Check for non-negative
+        if weight_float < 0:
+            err = SpecValueError()
+            err.index = idx
+            raise err
+
+        # Check for duplicate
+        if name in weights:
+            err = DuplicateNameError()
+            err.index = idx
+            err.name = name
+            raise err
+
+        names_order.append(name)
+        weights[name] = Fraction(weight_float)
+
+    # Sum weights
+    S = sum(weights.values())
+
+    # All zero case
+    if S == 0:
+        return {name: 0 for name in names_order}
+
+    # Largest-remainder apportionment with exact arithmetic
+    capacity_frac = Fraction(capacity)
+    quotas = {}
+    bases = {}
+
+    for name in names_order:
+        q = capacity_frac * weights[name] / S
+        base = int(q)
+        quotas[name] = q
+        bases[name] = base
+
+    remainder = capacity - sum(bases.values())
+
+    # Fractional parts for sorting
+    frac_parts = []
+    for idx, name in enumerate(names_order):
+        frac_part = quotas[name] - bases[name]
+        frac_parts.append((frac_part, idx, name))
+
+    # Sort: largest fractional parts first, then by index
+    frac_parts.sort(key=lambda x: (-x[0], x[1]))
+
+    # Build result
+    result = {name: bases[name] for name in names_order}
+
+    # Distribute remainder
+    for i in range(remainder):
+        name = frac_parts[i][2]
+        result[name] += 1
+
+    return result

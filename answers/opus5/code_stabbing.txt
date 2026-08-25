@@ -1,0 +1,12 @@
+```python
+def min_points(intervals):
+    if not intervals:
+        return 0
+    count = 0
+    last_point = None
+    for start, end in sorted(intervals, key=lambda iv: iv[1]):
+        if last_point is None or start > last_point:
+            count += 1
+            last_point = end
+    return count
+```

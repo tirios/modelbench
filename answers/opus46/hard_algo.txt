@@ -1,0 +1,73 @@
+```python
+def schedule(intervals):
+    import bisect
+
+    # Validate all intervals
+    validated = []
+    for item in intervals:
+        try:
+            length = len(item)
+        except TypeError:
+            raise ValueError("Item is not a sequence")
+        if length != 3:
+            raise ValueError("Item must have exactly 3 elements")
+        s, e, w = item[0], item[1], item[2]
+        if e <= s:
+            raise ValueError("end must be greater than start")
+        if w < 0:
+            raise ValueError("weight must be non-negative")
+        validated.append((s, e, w))
+
+    n = len(validated)
+    if n == 0:
+        return (0, [])
+
+    # Build indexed intervals: (start, end, weight, original_index)
+    indexed = [(validated[i][0], validated[i][1], validated[i][2], i) for i in range(n)]
+    # Sort by end time (ties broken by start, then original index)
+    indexed.sort(key=lambda x: (x[1], x[0], x[3]))
+
+    # Sorted end times for binary search
+    ends = [x[1] for x in indexed]
+
+    # DP: dp[i] stores the optimal key (-total_weight, num_intervals, sum_indices)
+    # for the sub-problem considering sorted intervals 0..i.
+    dp = [None] * n
+    choice = [None] * n   # 0 = skip interval i, 1 = take interval i
+    pred = [0] * n         # predecessor index from binary search
+
+    empty = (0, 0, 0)
+
+    for i in range(n):
+        # Option 1: skip this interval
+        opt_skip = dp[i - 1] if i > 0 else empty
+
+        # Option 2: take this interval
+        s_i, e_i, w_i, idx_i = indexed[i]
+        # Find rightmost j < i with ends[j] <= s_i  (no conflict: touching OK)
+        p_i = bisect.bisect_right(ends, s_i, 0, i) - 1
+        pred[i] = p_i
+        prev = dp[p_i] if p_i >= 0 else empty
+        opt_take = (prev[0] - w_i, prev[1] + 1, prev[2] + idx_i)
+
+        if opt_take < opt_skip:
+            dp[i] = opt_take
+            choice[i] = 1
+        else:
+            dp[i] = opt_skip
+            choice[i] = 0
+
+    # Backtrack to recover chosen intervals
+    chosen = []
+    i = n - 1
+    while i >= 0:
+        if choice[i] == 1:
+            chosen.append(indexed[i][3])   # original index
+            i = pred[i]
+        else:
+            i -= 1
+
+    chosen.sort()
+    total_weight = -dp[n - 1][0]
+    return (total_weight, chosen)
+```

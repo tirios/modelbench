@@ -1,0 +1,51 @@
+```python
+import re
+
+_LINE_RE = re.compile(
+    r'^(?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z) '
+    r'run=(?P<run>-?\d+) '
+    r'ch=(?P<ch>\S+) '
+    r'val=(?P<val>nan|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?) '
+    r'flag=(?P<flag>\S+)$'
+)
+
+
+def parse(lines):
+    result = []
+    for line in lines:
+        if not isinstance(line, str):
+            continue
+        stripped = line.rstrip('\r\n')
+        m = _LINE_RE.match(stripped)
+        if not m:
+            continue
+
+        ts = m.group('ts')
+        run_str = m.group('run')
+        ch = m.group('ch')
+        val_str = m.group('val')
+        flag = m.group('flag')
+
+        try:
+            run = int(run_str)
+        except ValueError:
+            continue
+
+        if val_str == 'nan':
+            val = None
+        else:
+            try:
+                val = float(val_str)
+            except ValueError:
+                continue
+
+        result.append({
+            'ts': ts,
+            'run': run,
+            'ch': ch,
+            'val': val,
+            'flag': flag,
+        })
+
+    return result
+```

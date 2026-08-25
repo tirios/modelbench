@@ -1,0 +1,155 @@
+```python
+import re
+import math
+from fractions import Fraction
+
+
+class SpecError(Exception):
+    pass
+
+
+class SpecTypeError(SpecError, TypeError):
+    pass
+
+
+class SpecSyntaxError(SpecError, ValueError):
+    pass
+
+
+class SpecValueError(SpecError, ValueError):
+    pass
+
+
+class DuplicateNameError(SpecValueError):
+    pass
+
+
+class CapacityError(SpecError, ValueError):
+    pass
+
+
+_NAME_RE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
+
+
+def allocate(spec, capacity):
+    try:
+        return _allocate_impl(spec, capacity)
+    except SpecError:
+        raise
+    except Exception as exc:
+        e = SpecError(str(exc))
+        e.index = None
+        raise e from exc
+
+
+def _allocate_impl(spec, capacity):
+    # Step 1: spec type check
+    if not isinstance(spec, str):
+        e = SpecTypeError("spec must be a string")
+        e.index = None
+        e.argname = 'spec'
+        raise e
+
+    # Step 2: capacity type check (bool is rejected even though bool subclasses int)
+    if isinstance(capacity, bool) or not isinstance(capacity, int):
+        e = SpecTypeError("capacity must be an integer")
+        e.index = None
+        e.argname = 'capacity'
+        raise e
+
+    # Step 3: capacity >= 0
+    if capacity < 0:
+        e = CapacityError("capacity must be non-negative")
+        e.index = None
+        raise e
+
+    # Step 2.2: empty spec
+    if spec.strip() == '':
+        return {}
+
+    # Step 2.3: entry parsing
+    entries = spec.split(',')
+    accepted = []
+    seen_names = {}
+
+    for i, entry in enumerate(entries):
+        # (a) Exactly one '='
+        if entry.count('=') != 1:
+            e = SpecSyntaxError(f"entry {i}: expected exactly one '='")
+            e.index = i
+            raise e
+
+        name_part, weight_part = entry.split('=')
+        name = name_part.strip()
+        weight_str = weight_part.strip()
+
+        # (b) Valid name
+        if not _NAME_RE.match(name):
+            e = SpecSyntaxError(f"entry {i}: invalid name")
+            e.index = i
+            raise e
+
+        # (c) Parseable weight
+        try:
+            w = float(weight_str)
+        except ValueError:
+            e = SpecSyntaxError(f"entry {i}: invalid weight")
+            e.index = i
+            raise e
+
+        # (d) Finite weight
+        if math.isinf(w) or math.isnan(w):
+            e = SpecValueError(f"entry {i}: weight must be finite")
+            e.index = i
+            raise e
+
+        # (e) Non-negative weight
+        if w < 0:
+            e = SpecValueError(f"entry {i}: weight must be non-negative")
+            e.index = i
+            raise e
+
+        # (f) No duplicate name
+        if name in seen_names:
+            e = DuplicateNameError(f"entry {i}: duplicate name '{name}'")
+            e.index = i
+            e.name = name
+            raise e
+
+        seen_names[name] = i
+        accepted.append((name, Fraction(w)))
+
+    # Step 2.4: compute allocation
+    S = sum(w for _, w in accepted)
+
+    if S == 0:
+        return {name: 0 for name, _ in accepted}
+
+    cap_frac = Fraction(capacity)
+    k = len(accepted)
+
+    # Compute quotients, bases, and fractional parts using exact arithmetic
+    entries_data = []
+    total_base = 0
+    for idx, (name, w) in enumerate(accepted):
+        q = cap_frac * w / S
+        b = math.floor(q)
+        f = q - b
+        entries_data.append((name, b, f, idx))
+        total_base += b
+
+    r = capacity - total_base  # remainder to distribute, 0 <= r < k
+
+    # Find the r entries with largest fractional part; ties broken by smaller index
+    bonus = set()
+    if r > 0:
+        ranked = sorted(range(k), key=lambda j: (-entries_data[j][2], j))
+        for j in range(r):
+            bonus.add(ranked[j])
+
+    result = {}
+    for name, b, f, idx in entries_data:
+        result[name] = int(b) + (1 if idx in bonus else 0)
+
+    return result
+```

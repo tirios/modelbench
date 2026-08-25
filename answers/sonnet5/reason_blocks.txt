@@ -1,0 +1,12 @@
+Total samples recorded: 250 Hz x 90 s = 22500 samples.
+
+Discard first 12 s: 250 x 12 = 3000 samples.
+Discard last 8 s: 250 x 8 = 2000 samples.
+Remaining after trimming: 22500 - 3000 - 2000 = 17500 samples (this matches 250 Hz x (90-12-8)=70 s).
+
+Flag and remove 3.2% of the remaining 17500 samples: 17500 x 0.032 = 560 samples removed.
+Surviving samples: 17500 - 560 = 16940.
+
+Average in non-overlapping blocks of 125 samples: 16940 / 125 = 135.52, so there are 135 complete blocks (with 65 samples left over, not enough to form another full block).
+
+ANSWER: 135

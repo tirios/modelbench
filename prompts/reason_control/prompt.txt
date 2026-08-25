@@ -1,0 +1,8 @@
+Forty riders changed to a new position between their first and second run.
+Their drag area fell by an average of 0.008 m^2 from run one to run two.
+
+Forty other riders kept the same position throughout. Between their first and
+second run their drag area also fell, by an average of 0.005 m^2.
+
+Using these figures alone, what is the best estimate of the change in drag area
+attributable to the position change itself, in m^2?

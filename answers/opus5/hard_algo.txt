@@ -1,0 +1,104 @@
+```python
+from bisect import bisect_right
+
+
+def schedule(intervals):
+    """Maximum-weight non-overlapping interval selection.
+
+    Returns (total_weight, chosen_indices) for the selection minimising
+    (-total_weight, number_of_intervals, sum_of_original_indices)
+    compared lexicographically.  All three components are additive over a
+    selection and lexicographic order on tuples is translation invariant,
+    so the ordinary O(n log n) sort-by-end dynamic program is exact for
+    the full three-part key: carry the key itself as the DP value.
+    """
+    items = []
+    weights = []
+
+    for i, item in enumerate(intervals):
+        try:
+            n_el = len(item)
+        except TypeError:
+            raise ValueError(
+                "interval at index %d is not a sequence of three numbers" % i
+            ) from None
+        if n_el != 3:
+            raise ValueError(
+                "interval at index %d must have exactly three elements, got %d"
+                % (i, n_el)
+            )
+        try:
+            start = item[0]
+            end = item[1]
+            weight = item[2]
+        except Exception:
+            raise ValueError(
+                "interval at index %d is not a sequence of three numbers" % i
+            ) from None
+        try:
+            degenerate = end <= start
+            negative = weight < 0
+        except TypeError:
+            raise ValueError(
+                "interval at index %d has non-numeric fields" % i
+            ) from None
+        if degenerate:
+            raise ValueError(
+                "interval at index %d has end <= start" % i
+            )
+        if negative:
+            raise ValueError(
+                "interval at index %d has a negative weight" % i
+            )
+        items.append((end, start, weight, i))
+        weights.append(weight)
+
+    if not items:
+        return (0, [])
+
+    # Sort by end time (ties broken by start, weight, original index: any
+    # consistent order is fine, the predecessor lookup below does not care).
+    items.sort()
+    ends = [it[0] for it in items]
+    n = len(items)
+
+    # dp[k] = best key over selections drawn from sorted positions 0..k-1.
+    # Key = (-weight, count, index_sum); smaller is better on every rule.
+    dp = [(0, 0, 0)] * (n + 1)
+    prev = [0] * n
+    taken = bytearray(n + 1)
+    best = (0, 0, 0)
+
+    for k in range(1, n + 1):
+        end, start, weight, orig = items[k - 1]
+        # Half-open ranges: an earlier interval is compatible iff its end
+        # is <= this start, so bisect_right over the sorted ends counts
+        # exactly the compatible prefix.
+        p = bisect_right(ends, start, 0, k - 1)
+        prev[k - 1] = p
+        base = dp[p]
+        cand = (base[0] - weight, base[1] + 1, base[2] + orig)
+        # Strict '<' keeps the incumbent on an exact tie.  That is what makes
+        # a zero-weight interval unselectable (same weight, one more item)
+        # and what makes duplicates resolve to the smaller original index.
+        if cand < best:
+            best = cand
+            taken[k] = 1
+        dp[k] = best
+
+    chosen = []
+    k = n
+    while k > 0:
+        if taken[k]:
+            chosen.append(items[k - 1][3])
+            k = prev[k - 1]
+        else:
+            k -= 1
+    chosen.sort()
+
+    total = 0
+    for c in chosen:
+        total += weights[c]
+
+    return (total, chosen)
+```

@@ -1,0 +1,72 @@
+```python
+import math
+
+
+def rolling_mean(times, values, width, min_count=1):
+    """Trailing rolling mean over a time window.
+
+    For index i the window is every index j with
+        times[i] - width < times[j] <= times[i]
+    i.e. half-open: open at the old end, closed at the current point.
+    Index i is always inside its own window.
+    """
+    n = len(times)
+    if n != len(values):
+        raise ValueError("times and values must have the same length")
+    if not (math.isfinite(width) and width > 0):
+        raise ValueError("width must be a finite number strictly greater than 0")
+    if min_count < 1:
+        raise ValueError("min_count must be >= 1")
+    for i in range(1, n):
+        if not (times[i] > times[i - 1]):
+            raise ValueError("times must be strictly increasing")
+
+    if n == 0:
+        return []
+
+    out = [None] * n
+    lo = 0
+
+    # Running window sum kept as a Neumaier (improved Kahan) compensated
+    # pair (s, c): the true sum is s + c. A plain "add then subtract"
+    # running total (as in the original code) silently loses every low
+    # order digit while a much larger value is sitting in the window,
+    # and that loss re-surfaces as soon as the large value leaves the
+    # window again. The compensation term c captures exactly the bits
+    # that a plain float add/subtract would drop, so the recovered sum
+    # tracks math.fsum() of the current window to within a few ulps
+    # regardless of how the magnitudes of the values differ.
+    s = 0.0
+    c = 0.0
+
+    for i in range(n):
+        x = values[i]
+        t = s + x
+        if abs(s) >= abs(x):
+            c += (s - t) + x
+        else:
+            c += (x - t) + s
+        s = t
+
+        cutoff = times[i] - width
+        # "lo < i" guards the edge case where floating-point rounding
+        # makes times[i] - width == times[i]: index i must never be
+        # evicted from its own window.
+        while lo < i and times[lo] <= cutoff:
+            x = -values[lo]
+            t = s + x
+            if abs(s) >= abs(x):
+                c += (s - t) + x
+            else:
+                c += (x - t) + s
+            s = t
+            lo += 1
+
+        count = i - lo + 1
+        if count < min_count:
+            out[i] = None
+        else:
+            out[i] = (s + c) / count
+
+    return out
+```

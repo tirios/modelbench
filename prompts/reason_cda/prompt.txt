@@ -1,0 +1,7 @@
+Drag area is defined by D = q * CdA, where D is the drag force and q is the
+free-stream dynamic pressure.
+
+A measurement records a drag force of 21.4 N at an air speed of 13.0 m/s
+in air of density 1.19 kg/m^3.
+
+Compute CdA in square metres, to three decimal places.

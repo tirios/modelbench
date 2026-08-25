@@ -1,0 +1,86 @@
+```python
+import math
+from collections import deque
+
+
+class SlidingWindow:
+    def __init__(self, capacity):
+        if not isinstance(capacity, int) or capacity < 1:
+            raise ValueError()
+
+        self.capacity = capacity
+        self._queue = deque()
+
+    def __len__(self):
+        return len(self._queue)
+
+    def push(self, x):
+        if not isinstance(x, (int, float)):
+            raise ValueError()
+
+        x_float = float(x)
+        if math.isnan(x_float) or math.isinf(x_float):
+            raise ValueError()
+
+        evicted = None
+        if len(self._queue) == self.capacity:
+            evicted = self._queue.popleft()
+
+        self._queue.append(x_float)
+        return evicted
+
+    def snapshot(self):
+        return list(self._queue)
+
+    def mean(self):
+        if len(self._queue) == 0:
+            return None
+        return float(sum(self._queue) / len(self._queue))
+
+    def variance(self):
+        n = len(self._queue)
+        if n < 2:
+            return None
+
+        m = sum(self._queue) / n
+        variance = sum((x - m) ** 2 for x in self._queue) / (n - 1)
+        return float(variance)
+
+    def median(self):
+        if len(self._queue) == 0:
+            return None
+
+        sorted_vals = sorted(self._queue)
+        n = len(sorted_vals)
+
+        if n % 2 == 1:
+            return float(sorted_vals[n // 2])
+        else:
+            mid1 = sorted_vals[n // 2 - 1]
+            mid2 = sorted_vals[n // 2]
+            return float((mid1 + mid2) / 2.0)
+
+    def min(self):
+        if len(self._queue) == 0:
+            return None
+        return float(min(self._queue))
+
+    def max(self):
+        if len(self._queue) == 0:
+            return None
+        return float(max(self._queue))
+
+    def resize(self, new_capacity):
+        if not isinstance(new_capacity, int) or new_capacity < 1:
+            raise ValueError()
+
+        evicted = []
+        while len(self._queue) > new_capacity:
+            evicted.append(self._queue.popleft())
+
+        self.capacity = new_capacity
+        return evicted
+
+    def clear(self):
+        self._queue.clear()
+```

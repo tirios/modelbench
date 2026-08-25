@@ -1,0 +1,6 @@
+A force balance records at 250 Hz for 90 seconds continuously.
+The first 12 seconds and the last 8 seconds are discarded as transients.
+Of the samples that remain, exactly 3.2 percent are flagged and removed.
+The surviving samples are then averaged in non-overlapping blocks of 125 samples.
+
+How many COMPLETE blocks of 125 result? Give an integer.

@@ -1,0 +1,11 @@
+Write a Python function `fit_harmonics(theta, y, K)`.
+
+Fit, by ordinary least squares, the model
+
+    y ~= a0 + sum over k = 1..K of [ a_k * cos(k*theta) + b_k * sin(k*theta) ]
+
+to the samples (theta, y). `theta` is in radians.
+
+Return a tuple `(a0, a_list, b_list)` where `a0` is a float and `a_list` and
+`b_list` are lists of length K holding a_1..a_K and b_1..b_K in order.
+numpy is available and may be used.

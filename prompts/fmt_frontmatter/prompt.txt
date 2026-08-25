@@ -1,0 +1,12 @@
+Output ONLY a YAML frontmatter block, opening and closing with a line of
+exactly three hyphens, and nothing else.
+
+It describes a note recording a decision, taken on 12 August 2026, to keep two
+camera views rather than three.
+
+Fields required, in this order:
+  type          must be the literal value: decision
+  date          ISO form YYYY-MM-DD
+  description   one sentence, under 25 words, no colons anywhere in it
+  tags          a YAML list with exactly the two entries: cameras, methods
+  status        must be the literal value: settled

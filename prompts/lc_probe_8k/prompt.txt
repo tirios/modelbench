@@ -1,0 +1,415 @@
+LABORATORY NOTEBOOK, TRANSCRIBED. Entries are in order and are not dated.
+
+Entry 001. Session S8. Conditions were stable and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 002. Session S15. Conditions were stable and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 003. Session S22. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. The entry was reviewed the following morning and left as written.
+
+Entry 004. Session S29. Conditions were steady and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 005. Session S36. Conditions were mildly unsteady and a spare cable was swapped in and the check repeated. This entry was transcribed from the paper log without change.
+
+Entry 006. Session S3. Conditions were steady and no adjustment was made to the rig between this entry and the last. Nothing further was recorded against this entry.
+
+Entry 007. Session S10. Conditions were mildly unsteady and a spare cable was swapped in and the check repeated. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 008. Session S17. Conditions were mildly unsteady and a spare cable was swapped in and the check repeated. The entry was reviewed the following morning and left as written.
+
+Entry 009. Session S24. Conditions were steady and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 010. Session S31. Conditions were stable and the ambient reading was noted but not acted on. The entry was reviewed the following morning and left as written.
+
+Entry 011. Session S38. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. Nothing further was recorded against this entry.
+
+Entry 012. Session S5. Conditions were mildly unsteady and no adjustment was made to the rig between this entry and the last. The entry was reviewed the following morning and left as written.
+
+Entry 013. Session S12. Conditions were mildly unsteady and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 014. Session S19. Conditions were mildly unsteady and no adjustment was made to the rig between this entry and the last. The entry was reviewed the following morning and left as written.
+
+Entry 015. Session S26. Conditions were mildly unsteady and a spare cable was swapped in and the check repeated. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 016. Session S33. Conditions were steady and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 017. Session S40. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 018. Session S7. Conditions were steady and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 019. Session S14. Conditions were stable and the mounting torque was re-checked and left unchanged. This entry was transcribed from the paper log without change.
+
+Entry 020. Session S21. Conditions were settled and the operator logged a short pause before acquisition. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 021. Session S28. Conditions were settled and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 022. Session S35. Conditions were settled and the reference channel was re-zeroed between repeats. The margin carries a tick and no comment.
+
+Entry 023. Session S2. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 024. Session S9. Conditions were settled and the mounting torque was re-checked and left unchanged. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 025. Session S16. Conditions were drifting slightly and the mounting torque was re-checked and left unchanged. This entry was transcribed from the paper log without change.
+
+Entry 026. Session S23. Conditions were drifting slightly and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 027. Session S30. Conditions were stable and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 028. Session S37. Conditions were steady and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 029. Session S4. Conditions were mildly unsteady and the operator logged a short pause before acquisition. The entry was reviewed the following morning and left as written.
+
+Entry 030. Session S11. Conditions were drifting slightly and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 031. Session S18. Conditions were settled and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 032. Session S25. Conditions were steady and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 033. Session S32. Conditions were steady and a spare cable was swapped in and the check repeated. Nothing further was recorded against this entry.
+
+Entry 034. Session S39. Conditions were mildly unsteady and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 035. Session S6. Conditions were stable and the alignment jig was removed before the run began. The entry was reviewed the following morning and left as written.
+
+Entry 036. Session S13. Conditions were settled and acquisition was restarted once after an early trigger. This entry was transcribed from the paper log without change.
+
+Entry 037. Session S20. Conditions were steady and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 038. Session S27. Conditions were settled and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 039. Session S34. Conditions were mildly unsteady and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 040. Session S1. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. Nothing further was recorded against this entry.
+
+Entry 041. Session S8. Conditions were stable and a spare cable was swapped in and the check repeated. Nothing further was recorded against this entry.
+
+Entry 042. Session S15. Conditions were mildly unsteady and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 043. Session S22. Conditions were drifting slightly and a spare cable was swapped in and the check repeated. The entry was reviewed the following morning and left as written.
+
+Entry 044. Session S29. Conditions were steady and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 045. Session S36. Conditions were settled and no adjustment was made to the rig between this entry and the last. The entry was reviewed the following morning and left as written.
+
+Entry 046. Session S3. Conditions were stable and the reference channel was re-zeroed between repeats. The margin carries a tick and no comment.
+
+Entry 047. Session S10. Conditions were steady and the reference channel was re-zeroed between repeats. The margin carries a tick and no comment.
+
+Entry 048. Session S17. Conditions were settled and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 049. Session S24. Conditions were drifting slightly and acquisition was restarted once after an early trigger. The entry was reviewed the following morning and left as written.
+
+Entry 050. Session S31. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 051. Session S38. Conditions were drifting slightly and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 052. Session S5. Conditions were drifting slightly and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 053. Session S12. Conditions were drifting slightly and a spare cable was swapped in and the check repeated. The entry was reviewed the following morning and left as written.
+
+Entry 054. Session S19. Conditions were steady and a spare cable was swapped in and the check repeated. This entry was transcribed from the paper log without change.
+
+Entry 055. Session S26. Conditions were mildly unsteady and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 056. Session S33. Conditions were mildly unsteady and the operator logged a short pause before acquisition. The margin carries a tick and no comment.
+
+Entry 057. Session S40. Conditions were settled and the alignment jig was removed before the run began. Nothing further was recorded against this entry.
+
+Entry 058. Session S7. Conditions were settled and the mounting torque was re-checked and left unchanged. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 059. Session S14. Conditions were settled and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 060. Session S21. Conditions were settled and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 061. Session S28. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 062. Session S35. Conditions were stable and acquisition was restarted once after an early trigger. The correction constant that applies to session S19 is not reproduced here; it is recorded in entry 172. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 063. Session S2. Conditions were settled and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 064. Session S9. Conditions were stable and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 065. Session S16. Conditions were settled and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 066. Session S23. Conditions were settled and the reference channel was re-zeroed between repeats. The margin carries a tick and no comment.
+
+Entry 067. Session S30. Conditions were settled and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 068. Session S37. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. The entry was reviewed the following morning and left as written.
+
+Entry 069. Session S4. Conditions were settled and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 070. Session S11. Conditions were steady and a spare cable was swapped in and the check repeated. The entry was reviewed the following morning and left as written.
+
+Entry 071. Session S18. Conditions were stable and a spare cable was swapped in and the check repeated. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 072. Session S25. Conditions were stable and acquisition was restarted once after an early trigger. Nothing further was recorded against this entry.
+
+Entry 073. Session S32. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 074. Session S39. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. The entry was reviewed the following morning and left as written.
+
+Entry 075. Session S6. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 076. Session S13. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 077. Session S20. Conditions were mildly unsteady and the operator logged a short pause before acquisition. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 078. Session S27. Conditions were mildly unsteady and the ambient reading was noted but not acted on. The entry was reviewed the following morning and left as written.
+
+Entry 079. Session S34. Conditions were stable and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 080. Session S1. Conditions were drifting slightly and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 081. Session S8. Conditions were stable and the operator logged a short pause before acquisition. This entry was transcribed from the paper log without change.
+
+Entry 082. Session S15. Conditions were mildly unsteady and no adjustment was made to the rig between this entry and the last. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 083. Session S22. Conditions were steady and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 084. Session S29. Conditions were settled and a spare cable was swapped in and the check repeated. Nothing further was recorded against this entry.
+
+Entry 085. Session S36. Conditions were stable and the alignment jig was removed before the run began. Nothing further was recorded against this entry.
+
+Entry 086. Session S3. Conditions were stable and acquisition was restarted once after an early trigger. Nothing further was recorded against this entry.
+
+Entry 087. Session S10. Conditions were settled and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 088. Session S17. Conditions were settled and the alignment jig was removed before the run began. The entry was reviewed the following morning and left as written.
+
+Entry 089. Session S24. Conditions were drifting slightly and a spare cable was swapped in and the check repeated. This entry was transcribed from the paper log without change.
+
+Entry 090. Session S31. Conditions were stable and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 091. Session S38. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 092. Session S5. Conditions were drifting slightly and the ambient reading was noted but not acted on. The entry was reviewed the following morning and left as written.
+
+Entry 093. Session S12. Conditions were mildly unsteady and the operator logged a short pause before acquisition. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 094. Session S19. Conditions were steady and a spare cable was swapped in and the check repeated. Nothing further was recorded against this entry.
+
+Entry 095. Session S26. Conditions were settled and the reference channel was re-zeroed between repeats. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 096. Session S33. Conditions were stable and a spare cable was swapped in and the check repeated. The margin carries a tick and no comment.
+
+Entry 097. Session S40. Conditions were drifting slightly and no adjustment was made to the rig between this entry and the last. The margin carries a tick and no comment.
+
+Entry 098. Session S7. Conditions were settled and the ambient reading was noted but not acted on. The margin carries a tick and no comment.
+
+Entry 099. Session S14. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 100. Session S21. Conditions were stable and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 101. Session S28. Conditions were drifting slightly and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 102. Session S35. Conditions were steady and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 103. Session S2. Conditions were drifting slightly and acquisition was restarted once after an early trigger. The entry was reviewed the following morning and left as written.
+
+Entry 104. Session S9. Conditions were drifting slightly and the mounting torque was re-checked and left unchanged. Nothing further was recorded against this entry.
+
+Entry 105. Session S16. Conditions were stable and the ambient reading was noted but not acted on. The entry was reviewed the following morning and left as written.
+
+Entry 106. Session S23. Conditions were settled and the mounting torque was re-checked and left unchanged. The entry was reviewed the following morning and left as written.
+
+Entry 107. Session S30. Conditions were drifting slightly and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 108. Session S37. Conditions were stable and acquisition was restarted once after an early trigger. The entry was reviewed the following morning and left as written.
+
+Entry 109. Session S4. Conditions were drifting slightly and the mounting torque was re-checked and left unchanged. The entry was reviewed the following morning and left as written.
+
+Entry 110. Session S11. Conditions were drifting slightly and acquisition was restarted once after an early trigger. The entry was reviewed the following morning and left as written.
+
+Entry 111. Session S18. Conditions were settled and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 112. Session S25. Conditions were stable and the ambient reading was noted but not acted on. This entry was transcribed from the paper log without change.
+
+Entry 113. Session S32. Conditions were stable and the operator logged a short pause before acquisition. Nothing further was recorded against this entry.
+
+Entry 114. Session S39. Conditions were mildly unsteady and acquisition was restarted once after an early trigger. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 115. Session S6. Conditions were stable and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 116. Session S13. Conditions were settled and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 117. Session S20. Conditions were settled and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 118. Session S27. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. The auxiliary reference marker was measured at 47.317 millimetres from the datum. Nothing further was recorded against this entry.
+
+Entry 119. Session S34. Conditions were settled and the ambient reading was noted but not acted on. Nothing further was recorded against this entry.
+
+Entry 120. Session S1. Conditions were stable and no adjustment was made to the rig between this entry and the last. Nothing further was recorded against this entry.
+
+Entry 121. Session S8. Conditions were drifting slightly and a spare cable was swapped in and the check repeated. This entry was transcribed from the paper log without change.
+
+Entry 122. Session S15. Conditions were stable and the ambient reading was noted but not acted on. The margin carries a tick and no comment.
+
+Entry 123. Session S22. Conditions were drifting slightly and a spare cable was swapped in and the check repeated. The entry was reviewed the following morning and left as written.
+
+Entry 124. Session S29. Conditions were settled and the ambient reading was noted but not acted on. Nothing further was recorded against this entry.
+
+Entry 125. Session S36. Conditions were settled and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 126. Session S3. Conditions were stable and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 127. Session S10. Conditions were settled and the reference channel was re-zeroed between repeats. The entry was reviewed the following morning and left as written.
+
+Entry 128. Session S17. Conditions were drifting slightly and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 129. Session S24. Conditions were stable and the reference channel was re-zeroed between repeats. The margin carries a tick and no comment.
+
+Entry 130. Session S31. Conditions were stable and the mounting torque was re-checked and left unchanged. Nothing further was recorded against this entry.
+
+Entry 131. Session S38. Conditions were mildly unsteady and acquisition was restarted once after an early trigger. Nothing further was recorded against this entry.
+
+Entry 132. Session S5. Conditions were steady and the mounting torque was re-checked and left unchanged. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 133. Session S12. Conditions were drifting slightly and the operator logged a short pause before acquisition. The margin carries a tick and no comment.
+
+Entry 134. Session S19. Conditions were drifting slightly and the mounting torque was re-checked and left unchanged. Nothing further was recorded against this entry.
+
+Entry 135. Session S26. Conditions were steady and no adjustment was made to the rig between this entry and the last. This entry was transcribed from the paper log without change.
+
+Entry 136. Session S33. Conditions were steady and the reference channel was re-zeroed between repeats. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 137. Session S40. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. The entry was reviewed the following morning and left as written.
+
+Entry 138. Session S7. Conditions were stable and the reference channel was re-zeroed between repeats. The margin carries a tick and no comment.
+
+Entry 139. Session S14. Conditions were mildly unsteady and the operator logged a short pause before acquisition. This entry was transcribed from the paper log without change.
+
+Entry 140. Session S21. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. This entry was transcribed from the paper log without change.
+
+Entry 141. Session S28. Conditions were steady and a spare cable was swapped in and the check repeated. Nothing further was recorded against this entry.
+
+Entry 142. Session S35. Conditions were settled and the mounting torque was re-checked and left unchanged. This entry was transcribed from the paper log without change.
+
+Entry 143. Session S2. Conditions were stable and the operator logged a short pause before acquisition. The margin carries a tick and no comment.
+
+Entry 144. Session S9. Conditions were stable and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 145. Session S16. Conditions were drifting slightly and the operator logged a short pause before acquisition. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 146. Session S23. Conditions were stable and the ambient reading was noted but not acted on. The margin carries a tick and no comment.
+
+Entry 147. Session S30. Conditions were settled and the alignment jig was removed before the run began. Nothing further was recorded against this entry.
+
+Entry 148. Session S37. Conditions were mildly unsteady and acquisition was restarted once after an early trigger. The entry was reviewed the following morning and left as written.
+
+Entry 149. Session S4. Conditions were stable and acquisition was restarted once after an early trigger. This entry was transcribed from the paper log without change.
+
+Entry 150. Session S11. Conditions were stable and no adjustment was made to the rig between this entry and the last. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 151. Session S18. Conditions were steady and no adjustment was made to the rig between this entry and the last. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 152. Session S25. Conditions were settled and the reference channel was re-zeroed between repeats. The entry was reviewed the following morning and left as written.
+
+Entry 153. Session S32. Conditions were settled and the ambient reading was noted but not acted on. The margin carries a tick and no comment.
+
+Entry 154. Session S39. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 155. Session S6. Conditions were settled and the operator logged a short pause before acquisition. This entry was transcribed from the paper log without change.
+
+Entry 156. Session S13. Conditions were steady and the operator logged a short pause before acquisition. Nothing further was recorded against this entry.
+
+Entry 157. Session S20. Conditions were stable and the ambient reading was noted but not acted on. The entry was reviewed the following morning and left as written.
+
+Entry 158. Session S27. Conditions were drifting slightly and the ambient reading was noted but not acted on. The margin carries a tick and no comment.
+
+Entry 159. Session S34. Conditions were settled and the operator logged a short pause before acquisition. This entry was transcribed from the paper log without change.
+
+Entry 160. Session S1. Conditions were steady and a spare cable was swapped in and the check repeated. Nothing further was recorded against this entry.
+
+Entry 161. Session S8. Conditions were mildly unsteady and a spare cable was swapped in and the check repeated. The entry was reviewed the following morning and left as written.
+
+Entry 162. Session S15. Conditions were steady and the operator logged a short pause before acquisition. The margin carries a tick and no comment.
+
+Entry 163. Session S22. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 164. Session S29. Conditions were drifting slightly and the alignment jig was removed before the run began. The entry was reviewed the following morning and left as written.
+
+Entry 165. Session S36. Conditions were settled and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 166. Session S3. Conditions were settled and a spare cable was swapped in and the check repeated. The margin carries a tick and no comment.
+
+Entry 167. Session S10. Conditions were mildly unsteady and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 168. Session S17. Conditions were drifting slightly and the alignment jig was removed before the run began. This entry was transcribed from the paper log without change.
+
+Entry 169. Session S24. Conditions were steady and no adjustment was made to the rig between this entry and the last. The entry was reviewed the following morning and left as written.
+
+Entry 170. Session S31. Conditions were drifting slightly and the operator logged a short pause before acquisition. Nothing further was recorded against this entry.
+
+Entry 171. Session S38. Conditions were steady and the mounting torque was re-checked and left unchanged. The entry was reviewed the following morning and left as written.
+
+Entry 172. Session S5. Conditions were mildly unsteady and no adjustment was made to the rig between this entry and the last. The correction constant stored in this entry is 0.9142. It is the value referred to from the earlier cross-reference. Nothing further was recorded against this entry.
+
+Entry 173. Session S12. Conditions were drifting slightly and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 174. Session S19. Conditions were steady and a spare cable was swapped in and the check repeated. The margin carries a tick and no comment.
+
+Entry 175. Session S26. Conditions were settled and a spare cable was swapped in and the check repeated. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 176. Session S33. Conditions were drifting slightly and the ambient reading was noted but not acted on. Nothing further was recorded against this entry.
+
+Entry 177. Session S40. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. The entry was reviewed the following morning and left as written.
+
+Entry 178. Session S7. Conditions were steady and the alignment jig was removed before the run began. The margin carries a tick and no comment.
+
+Entry 179. Session S14. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. This entry was transcribed from the paper log without change.
+
+Entry 180. Session S21. Conditions were settled and the operator logged a short pause before acquisition. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 181. Session S28. Conditions were mildly unsteady and acquisition was restarted once after an early trigger. The entry was reviewed the following morning and left as written.
+
+Entry 182. Session S35. Conditions were steady and the ambient reading was noted but not acted on. Nothing further was recorded against this entry.
+
+Entry 183. Session S2. Conditions were settled and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 184. Session S9. Conditions were steady and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 185. Session S16. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 186. Session S23. Conditions were settled and acquisition was restarted once after an early trigger. The margin carries a tick and no comment.
+
+Entry 187. Session S30. Conditions were mildly unsteady and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 188. Session S37. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. This entry was transcribed from the paper log without change.
+
+Entry 189. Session S4. Conditions were mildly unsteady and the operator logged a short pause before acquisition. This entry was transcribed from the paper log without change.
+
+Entry 190. Session S11. Conditions were drifting slightly and the alignment jig was removed before the run began. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 191. Session S18. Conditions were mildly unsteady and the ambient reading was noted but not acted on. A follow-up was pencilled in but no follow-up entry exists.
+
+Entry 192. Session S25. Conditions were settled and the operator logged a short pause before acquisition. The margin carries a tick and no comment.
+
+Entry 193. Session S32. Conditions were mildly unsteady and no adjustment was made to the rig between this entry and the last. The entry was reviewed the following morning and left as written.
+
+Entry 194. Session S39. Conditions were mildly unsteady and the mounting torque was re-checked and left unchanged. This entry was transcribed from the paper log without change.
+
+Entry 195. Session S6. Conditions were drifting slightly and acquisition was restarted once after an early trigger. Nothing further was recorded against this entry.
+
+Entry 196. Session S13. Conditions were drifting slightly and the mounting torque was re-checked and left unchanged. The margin carries a tick and no comment.
+
+Entry 197. Session S20. Conditions were drifting slightly and the reference channel was re-zeroed between repeats. Nothing further was recorded against this entry.
+
+Entry 198. Session S27. Conditions were steady and the alignment jig was removed before the run began. Nothing further was recorded against this entry.
+
+Entry 199. Session S34. Conditions were steady and no adjustment was made to the rig between this entry and the last. The margin carries a tick and no comment.
+
+Entry 200. Session S1. Conditions were steady and the ambient reading was noted but not acted on. Nothing further was recorded against this entry.
+
+
+Answer these three questions about the notebook above.
+
+Q1. At how many millimetres from the datum was the auxiliary reference marker
+    measured? Give the number only.
+Q2. What is the numerical value of the correction constant that applies to
+    session S19? You will need to follow a cross-reference to find it.
+Q3. Which operator recorded entry 090, by name?
+
+Reply with exactly three lines:
+A1: <answer>
+A2: <answer>
+A3: <answer>

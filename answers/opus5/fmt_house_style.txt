@@ -1,0 +1,1 @@
+I will standardise the run-naming convention so that every wind tunnel run carries the same date, rider, configuration and repeat fields, then re-analyse the legacy runs recorded before the convention existed and rename them to match, because the current mix of ad hoc names makes runs hard to match to test conditions and quietly breaks any pooled analysis across sessions. #phd

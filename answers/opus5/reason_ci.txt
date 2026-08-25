@@ -1,0 +1,13 @@
+The interval [-0.002, 0.014] contains zero, so the null value of no difference is among the values not rejected by a two-sided test at the 5 percent level. That is exactly statement (b): the data are compatible with no difference at that level. Note "compatible with" is not "supports" — every value in the interval, including 0.014, is equally compatible in this sense.
+
+Why the others fail:
+
+(a) This is the standard misreading of a frequentist interval. The probability statement attaches to the procedure, not to this realised interval: 95 percent of intervals constructed this way would cover the true difference. Once computed, the interval either contains the true value or it does not; the true difference is a fixed constant, not a random variable. A 95 percent probability statement about the parameter given the data requires a Bayesian credible interval with a prior.
+
+(b) Correct.
+
+(c) Failing to reject zero is not evidence that the difference is exactly zero. The interval also fails to reject 0.010, 0.013 and every other value it contains. Absence of evidence against a hypothesis is not evidence for it, and here the interval is wide relative to the plausible effects, so the result is uninformative rather than a demonstration of no effect.
+
+(d) "Necessarily" is what breaks this. Interval width depends on the estimated standard error, which is a random quantity: a larger sample tends to narrow the interval in expectation, but a particular larger sample can return a bigger sample variance and hence a wider interval. The guarantee is asymptotic and probabilistic, not deterministic for any given draw.
+
+ANSWER: b

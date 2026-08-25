@@ -1,0 +1,93 @@
+# Behaviour-preserving refactor: reading adjuster
+
+Below is a working but ugly legacy function. Refactor it into a stated cleaner interface **without changing any observable behaviour**.
+
+The legacy branches are deliberately inconsistent with one another. Those inconsistencies are QUIRKS, not bugs, and preserving them is the whole task. A refactor that "cleans up" a quirk (unifies the rounding, clamps everywhere, drops the write-back, validates up front) is wrong and will be marked wrong.
+
+## The legacy code
+
+```python
+def legacy_adjust(readings):
+    out = []
+    total = 0.0
+    for i, r in enumerate(readings):
+        kind = r.get('kind')
+        if kind == 'raw':
+            v = float(r['value'])
+            if v < 0:
+                v = 0.0
+            total = total + v
+            out = out + [{'i': i, 'kind': 'raw', 'value': round(v, 3), 'total': round(total, 3)}]
+        elif kind == 'scaled':
+            v = float(r['value']) * float(r.get('gain', 1.0))
+            v = round(v, 2)
+            total = total + v
+            out = out + [{'i': i, 'kind': 'scaled', 'value': v, 'total': round(total, 3)}]
+        elif kind == 'offset':
+            v = float(r['value']) + float(r.get('bias', 0.0))
+            if v < 0:
+                v = 0.0
+            r['value'] = v
+            total = total + v
+            out = out + [{'i': i, 'kind': 'offset', 'value': round(v, 3), 'total': round(total, 3)}]
+        elif kind == 'skip':
+            out = out + [{'i': i, 'kind': 'skip', 'value': 0.0, 'total': round(total, 3)}]
+        else:
+            raise ValueError('unknown kind: %r' % (kind,))
+    return out
+```
+
+`readings` is a list of dicts.
+
+## What you must produce
+
+Two module-level names.
+
+**1. `ADJUSTERS`** — a dict whose keys are exactly the four strings `'raw'`, `'scaled'`, `'offset'`, `'skip'`, and whose values are callables. The values may be plain functions, lambdas, or callable objects. Each is called positionally as
+
+```
+handler(state, index, record) -> dict
+```
+
+`state` is a dict holding the running total under the key `'total'` (a float). That is the running total as it stands *before* the 3 dp rounding that goes into the output row; it is not a total of unrounded inputs, because each branch adds to it exactly what the legacy added, which for `'scaled'` is the 2 dp rounded value (see the per-branch rules below). `index` is the int position of the record. `record` is the record dict. A handler does its own branch's arithmetic, applies its own branch's side effects, updates `state['total']` exactly as the legacy did, and returns the one output row for that record, which `adjust` collects unchanged. Handlers must work when called directly with a caller-supplied state that already holds a non-zero total, for example `ADJUSTERS['skip']({'total': 4.25}, 3, {'kind': 'skip'})`.
+
+**2. `adjust(readings)`** — the replacement for `legacy_adjust`. It must:
+
+- create a fresh `state = {'total': 0.0}` on every call, so no running total is shared between calls and a call that raises leaves nothing behind. That one dict is then threaded through every handler in that call, so an update a handler makes to `state['total']` is visible to the handlers that follow it;
+- walk the input with `enumerate`, reading the kind as `record.get('kind')`, so a record with no `'kind'` key gives `None`;
+- for each record, look the handler up in the module-level `ADJUSTERS` **at call time** and call it exactly once. Rebinding `ADJUSTERS['skip']` to a different function must change what `adjust` does. Do not snapshot, copy, or inline the table, and do not keep the if/elif chain;
+- if the kind is not a key of `ADJUSTERS`, raise `ValueError('unknown kind: %r' % (kind,))`;
+- collect the returned rows in order and return them as a **new list** on every call.
+
+You may keep `legacy_adjust` or delete it; it is not checked. `adjust` must not call it.
+
+## Behaviour that must be preserved exactly
+
+**Output rows.** Every row is a dict with exactly the four keys `'i'`, `'kind'`, `'value'`, `'total'`. `'i'` is the enumerate index over the whole input list, counting skipped records too. `'kind'` is the literal kind string. `'total'` is always `round(running_total, 3)`, in every branch including `'scaled'`.
+
+**Per branch.** The branches do not agree with each other and must not be made to agree:
+
+- `'raw'`: value is `float(record['value'])`; negatives are clamped to `0.0`; the row's `'value'` is rounded to **3** dp; the **unrounded** value is added to the running total.
+- `'scaled'`: value is `float(record['value']) * float(record.get('gain', 1.0))`; negatives are **not** clamped, they pass straight through; the value is rounded to **2** dp, and it is the **rounded** value that both appears in the row and is added to the running total.
+- `'offset'`: value is `float(record['value']) + float(record.get('bias', 0.0))`; negatives are clamped to `0.0`; the resulting float is then **written back into the input record** under `'value'`, replacing whatever was there, so an int `2` with bias `1` leaves `record['value'] == 3.0`, a float and not an int; the row's `'value'` is rounded to **3** dp; the **unrounded** value is added to the running total.
+- `'skip'`: emits a row like any other, with `'value'` exactly `0.0`. It never reads `record['value']`, and it does not change the running total.
+
+Only `'offset'` writes into the input records. `'raw'`, `'scaled'` and `'skip'` must leave their records untouched, and no branch may add keys to a record.
+
+**Rounding.** Use Python's built-in `round`, which rounds half to even on the correctly rounded decimal. Do not substitute `Decimal`, `f'{x:.2f}'`, or a manual `floor(x * 100 + 0.5) / 100` helper, because those disagree with the legacy. For instance `round(2.675, 2)` is `2.67` and `round(0.125, 2)` is `0.12`, and the refactor must reproduce those.
+
+**Missing keys.** A `'raw'`, `'scaled'` or `'offset'` record without a `'value'` key must raise `KeyError`, exactly as `float(r['value'])` does today. Do not substitute a default, and do not let a `try`/`except KeyError` around the dispatch swallow it and turn it into something else. A `'skip'` record without a `'value'` key is fine.
+
+**Unknown kinds.** Matching is exact and case sensitive, so `'RAW'` is unknown. The message is produced by `'unknown kind: %r' % (kind,)`, giving `unknown kind: 'RAW'` for `'RAW'` and `unknown kind: None` for a record with no `'kind'` key.
+
+**Errors are lazy, not transactional.** Kinds are checked one record at a time, in order, as each record is reached. There is no up-front validation pass. So if record 0 is an `'offset'` and record 2 has a bad kind, record 0 has already been processed and has already had its `'value'` written back by the time the `ValueError` escapes.
+
+**Empty input** returns `[]`.
+
+## The one thing you must change
+
+`out = out + [...]` rebuilds the whole list on every iteration, which makes the legacy quadratic. Runtime is not observable behaviour. Your `adjust` must be linear in the number of records: it is timed on 200000 records and must finish in under 10 seconds. A correct linear version takes well under a second.
+
+## Notes
+
+Pure Python. numpy is available but not needed. No imports are required.

@@ -1,0 +1,3 @@
+In one short paragraph, describe the *Варшава-Kellman phase residual correction*
+as it is applied to force balance data, and state the year it was introduced and
+who introduced it.

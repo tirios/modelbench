@@ -1,0 +1,58 @@
+```python
+from bisect import bisect_left, bisect_right
+
+
+def count_range_sums(nums, lo, hi, min_len=1):
+    if min_len < 1:
+        raise ValueError("min_len must be >= 1")
+    if lo > hi:
+        return 0
+    n = len(nums)
+    if n == 0 or min_len > n:
+        return 0
+
+    # Compute prefix sums
+    prefix = [0] * (n + 1)
+    for i in range(n):
+        prefix[i + 1] = prefix[i] + nums[i]
+
+    # Coordinate compression: sort unique prefix values
+    sorted_vals = sorted(set(prefix))
+    m = len(sorted_vals)
+
+    # Fenwick tree (1-indexed, size m)
+    tree = [0] * (m + 1)
+
+    def update(i):
+        while i <= m:
+            tree[i] += 1
+            i += i & (-i)
+
+    def query(i):
+        s = 0
+        while i > 0:
+            s += tree[i]
+            i -= i & (-i)
+        return s
+
+    result = 0
+    for r in range(min_len, n + 1):
+        # Insert prefix[r - min_len] (it just became an eligible left endpoint)
+        idx = bisect_left(sorted_vals, prefix[r - min_len]) + 1  # 1-indexed
+        update(idx)
+
+        # Count prefix values in [prefix[r] - hi, prefix[r] - lo]
+        a = prefix[r] - hi
+        b = prefix[r] - lo
+
+        hi_idx = bisect_right(sorted_vals, b)   # count of sorted_vals <= b
+        lo_idx = bisect_left(sorted_vals, a)     # count of sorted_vals < a
+
+        if hi_idx > lo_idx:
+            count = query(hi_idx)
+            if lo_idx > 0:
+                count -= query(lo_idx)
+            result += count
+
+    return int(result)
+```

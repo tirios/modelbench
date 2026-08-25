@@ -1,0 +1,9 @@
+---
+type: decision
+date: 2026-08-12
+description: Two camera views will be kept rather than three, because the third view added no information the other two did not already provide.
+tags:
+  - cameras
+  - methods
+status: settled
+---

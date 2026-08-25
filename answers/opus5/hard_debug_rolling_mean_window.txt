@@ -1,0 +1,109 @@
+```python
+import math
+
+
+def rolling_mean(times, values, width, min_count=1):
+    """Trailing rolling mean over the half-open window (times[i] - width, times[i]].
+
+    Fixes over the original:
+      * the window is open at the old end, so a sample exactly ``width`` older
+        than ``times[i]`` is dropped (``<=`` in the eviction test, not ``<``);
+      * the left pointer is never allowed past ``i``, so point ``i`` stays in its
+        own window even when ``times[i] - width`` rounds back to ``times[i]``;
+      * ``width`` must be finite, so positive infinity is rejected as well as
+        zero, negatives and NaN;
+      * ``times`` is checked for strict increase before any output is produced;
+      * the window sum is carried in a two-stack queue holding exact Shewchuk
+        expansions, so no value is ever subtracted back out of a running total
+        and the result matches ``math.fsum`` over the window bit for bit, while
+        staying amortised O(1) per point.
+    """
+    n = len(times)
+    if n != len(values):
+        raise ValueError("times and values must have the same length")
+
+    try:
+        w = float(width)
+    except (TypeError, ValueError):
+        raise ValueError("width must be a finite number greater than 0")
+    if not math.isfinite(w) or w <= 0.0:
+        raise ValueError("width must be a finite number greater than 0")
+
+    if min_count < 1:
+        raise ValueError("min_count must be >= 1")
+
+    # Local copies: the inputs are never touched, and the arithmetic below is
+    # done on plain Python floats.
+    t = list(map(float, times))
+    v = list(map(float, values))
+
+    for k in range(1, n):
+        if not (t[k - 1] < t[k]):
+            raise ValueError("times must be strictly increasing")
+
+    fsum = math.fsum
+    out = [None] * n
+
+    # Queue-as-two-stacks. The window is the index range [lo, i], split into a
+    # "front" part [lo, b] and a "back" part [b + 1, i]; lo <= b + 1 always.
+    # F[j] holds the exact sum of v[j:b + 1] as a non-overlapping expansion, so
+    # popping the oldest sample just steps the index forward onto a sum that
+    # never contained it. back holds the exact sum of v[b + 1:i + 1]. Both are
+    # built by addition only, so a huge value leaving the window cannot take the
+    # significant digits of the survivors with it.
+    F = [None] * n
+    back = []
+    lo = 0
+    b = -1
+
+    for i in range(n):
+        # Grow the back expansion by v[i] (Shewchuk / fsum-style exact add).
+        x = v[i]
+        k = 0
+        for y in back:
+            if abs(x) < abs(y):
+                x, y = y, x
+            hi = x + y
+            err = y - (hi - x)
+            if err:
+                back[k] = err
+                k += 1
+            x = hi
+        back[k:] = [x]
+
+        cutoff = t[i] - w
+        while lo < i and t[lo] <= cutoff:
+            if lo > b:
+                # Front exhausted: turn the back range [b + 1, i] into suffix
+                # sums. Each index is transferred at most once, so the whole
+                # call stays amortised O(n).
+                prev = []
+                for j in range(i, b, -1):
+                    cur = prev[:]
+                    x = v[j]
+                    k = 0
+                    for y in cur:
+                        if abs(x) < abs(y):
+                            x, y = y, x
+                        hi = x + y
+                        err = y - (hi - x)
+                        if err:
+                            cur[k] = err
+                            k += 1
+                        x = hi
+                    cur[k:] = [x]
+                    F[j] = cur
+                    prev = cur
+                b = i
+                back = []
+            lo += 1
+
+        count = i - lo + 1
+        if count >= min_count:
+            if lo <= b:
+                out[i] = fsum(F[lo] + back) / count
+            else:
+                out[i] = fsum(back) / count
+
+    return out
+```

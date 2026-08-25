@@ -1,0 +1,113 @@
+Write Python (standard library plus numpy; no other third-party libraries) that defines two
+top-level callables, `log_sum_exp` and `weighted_quantile`. Helper functions are fine.
+
+====================================================================
+FUNCTION 1:  log_sum_exp(xs) -> float
+====================================================================
+`xs` is a sequence (list, tuple or 1-D numpy array) of real numbers. It may be empty.
+Entries may be float('-inf').
+
+Behaviour:
+  * If any entry is NaN or +inf, raise ValueError.
+  * If `xs` is empty, or if every entry is -inf, return float('-inf').
+  * Otherwise return log(sum(exp(x) for x in xs)) as a Python float. Entries equal to -inf
+    contribute exactly 0 to the sum.
+  * The evaluation must be numerically stable: no intermediate overflow to +inf and no
+    underflow of the whole sum to 0. In particular
+        log_sum_exp([1e6, 1e6])        -> 1000000.6931471806      (i.e. 1e6 + log 2)
+        log_sum_exp([-1e6, -1e6, -1e6]) -> -999998.9013877113     (i.e. -1e6 + log 3)
+        log_sum_exp([710.0]*4)          -> 710.0 + log 4
+    A formulation that calls exp() on the raw inputs will fail these.
+  * Finite returned values are compared to the reference with
+        abs(got - want) <= 1e-9 * max(1.0, abs(want))
+    The -inf cases above are compared by exact equality.
+
+====================================================================
+FUNCTION 2:  weighted_quantile(values, log_weights, qs) -> list[float]
+====================================================================
+Weighted quantiles where the weights arrive in the log domain (they are typically
+unnormalised log-likelihoods, so they may be enormous or minuscule).
+
+Arguments:
+  values       sequence of n real numbers (list, tuple or 1-D numpy array)
+  log_weights  sequence of n real numbers; entries may be -inf, meaning weight exactly zero
+  qs           sequence of Q probabilities, each in [0, 1]; may be empty; NOT necessarily
+               sorted
+
+Returns a Python `list` of Q Python `float`s, in the same order as `qs`.
+
+--------------------------------------------------------------------
+VALIDATION.  Every one of these raises ValueError, and nothing else may be raised:
+  V1  len(values) != len(log_weights)
+  V2  any element of `values` is NaN, +inf or -inf
+  V3  any element of `log_weights` is NaN or +inf        (-inf is legal)
+  V4  any element of `qs` is NaN, or is < 0.0, or is > 1.0
+  V5  every log weight is -inf, or n == 0
+Validation happens before any computation. If validation passes and `qs` is empty, return [].
+Validation is NOT skipped when `qs` is empty: `weighted_quantile([], [], [])` still raises
+ValueError under V5, and so does `weighted_quantile([1.0], [float('-inf')], [])`.
+
+--------------------------------------------------------------------
+ALGORITHM.  Follow it exactly; the tests check these exact numbers.
+
+  A1  Discard every index i with log_weights[i] == -inf. If nothing is left, raise
+      ValueError (rule V5).
+  A2  Let L = max of the remaining log weights (L is finite). Form t_i = exp(lw_i - L) for
+      each remaining entry, and discard every entry whose t_i is exactly 0.0, i.e. it
+      underflowed. At least one entry always survives, because the entry attaining L has
+      t_i == 1.0.
+  A3  Let Z = sum of the surviving t_i, and w_i = t_i / Z, so the surviving weights sum
+      to 1.
+  A4  MERGE EQUAL VALUES. Group the survivors by exact float equality of their value. Let
+      u_1 < u_2 < ... < u_m be the m distinct surviving values in ascending order, and let
+      v_k be the sum of the w_i in group k. Every v_k is strictly positive.
+  A5  If m == 1, every requested quantile is u_1: return [u_1] * Q.
+  A6  Let C_k = v_1 + ... + v_k (so C_m = 1) and p_k = C_k - v_k / 2. Rescale to the unit
+      interval:
+              h_k = (p_k - p_1) / (p_m - p_1)
+      so h_1 = 0, h_m = 1, and h is strictly increasing. The denominator equals
+      1 - (v_1 + v_m)/2 >= 1/2, so it is never zero once m >= 2.
+  A7  For each q in `qs`, in the order given:
+              q <= 0   ->  u_1
+              q >= 1   ->  u_m
+              else     ->  take the k with h_k <= q <= h_{k+1} and return
+                           u_k + (q - h_k) * (u_{k+1} - u_k) / (h_{k+1} - h_k)
+
+Notes:
+  * When all values are distinct and all weights are equal, A6/A7 reduce exactly to
+    numpy.percentile(values, 100*q) with its default linear interpolation. They do NOT
+    reduce to it when values repeat, because of the merge in A4.
+  * Returned values are compared to the reference with
+        abs(got - want) <= 1e-9 * max(1.0, abs(want))
+
+--------------------------------------------------------------------
+PERFORMANCE.  weighted_quantile must be about O((n + Q) log n), not O(n * Q). A single call
+with n = 20000 and Q = 20000 unsorted probabilities must finish in under 4 seconds; a
+correct solution takes a few tens of milliseconds. Answering each q by scanning all n
+entries is too slow and will fail that check.
+
+--------------------------------------------------------------------
+WORKED EXAMPLES (exact expected output):
+
+  weighted_quantile([1, 2, 3, 4], [0, 0, 0, 0], [0, 0.25, 0.5, 0.75, 1])
+      -> [1.0, 1.75, 2.5, 3.25, 4.0]
+
+  weighted_quantile([1, 2, 3, 4], [1000.0, 1000.0, 1000.0, 1000.0], [0.25, 0.5])
+      -> [1.75, 2.5]
+         (identical to the previous example; exp() on the raw log weights overflows here)
+
+  weighted_quantile([1.0, 1.0, 2.0], [0, 0, 0], [0.0, 0.5, 1.0])
+      -> [1.0, 1.5, 2.0]
+         (A4 merges: u = [1, 2], v = [2/3, 1/3], p = [1/3, 5/6], h = [0, 1])
+
+  weighted_quantile([5.0, 5.0, 5.0, 5.0, 9.0], [0.0]*5, [0.25, 0.5, 0.75])
+      -> [6.0, 7.0, 8.0]
+         (u = [5, 9], v = [0.8, 0.2], h = [0, 1])
+
+  weighted_quantile([0.0, 1.0, 2.0], [0.0, 0.6931471805599453, 0.0], [0.25, 0.5, 0.75])
+      -> [0.5, 1.0, 1.5]
+         (w = [0.25, 0.5, 0.25], h = [0, 0.5, 1])
+
+  weighted_quantile([10.0, 20.0, 30.0], [-1e6, 0.0, -1e6], [0.0, 0.25, 1.0])
+      -> [20.0, 20.0, 20.0]
+         (both outer t_i underflow to exactly 0.0 and are dropped by A2, leaving m == 1)

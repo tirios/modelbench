@@ -1,0 +1,3 @@
+A1: 47.317
+A2: 0.9142
+A3: Not stated in the document; no operator names are recorded anywhere in the notebook.

@@ -1,0 +1,11 @@
+Four runs A, B, C and D fill four consecutive slots numbered 1 to 4,
+one run per slot. All of the following hold:
+
+1. A is not in slot 1.
+2. C is in the slot immediately after B.
+3. D is in slot 1 or slot 4.
+4. C is not in slot 2.
+5. A is in an earlier slot than C.
+
+Give the order of runs from slot 1 to slot 4 as four letters with no spaces,
+for example ABCD.

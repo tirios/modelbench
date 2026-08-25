@@ -1,0 +1,15 @@
+Read the passage, then output ONE JSON object and nothing else. No prose
+before or after, no code fence commentary.
+
+Passage:
+  Run 41 was recorded on 3 August at an air speed of 14 m/s. The rider held a
+  single position throughout. Two of the six load channels were flagged as noisy
+  and excluded. The run was 62 seconds long and was judged usable.
+
+The object must have exactly these keys:
+  "run"          integer
+  "date"         string in YYYY-MM-DD form, assuming the year 2026
+  "speed_ms"     number
+  "duration_s"   number
+  "channels_used" integer, being the number of channels NOT excluded
+  "usable"       boolean

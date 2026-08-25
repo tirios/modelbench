@@ -1,0 +1,3 @@
+1. Random noise varies from reading to reading, so combining many readings over a longer window lets the positive and negative fluctuations cancel each other out.
+2. That cancellation improves with the number of readings, so the spread of the combined result falls in proportion to one over the square root of the window length.
+3. A systematic offset shifts every reading in the same direction by the same amount, so it survives the combination untouched and no amount of extra time will remove it.

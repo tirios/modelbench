@@ -1,0 +1,8 @@
+A condition is present in 2 percent of a population.
+
+Test A has sensitivity 0.95 and specificity 0.90.
+Test B has sensitivity 0.80 and specificity 0.97.
+Conditional on true status, the two tests are independent.
+
+A randomly selected individual tests POSITIVE on both tests.
+What is the probability they have the condition? Give the answer to three decimal places.

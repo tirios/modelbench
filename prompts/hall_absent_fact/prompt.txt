@@ -1,0 +1,8 @@
+Passage:
+  Three runs were recorded on the same afternoon. Run 12 and run 13 used the
+  same equipment configuration. Run 14 followed a break of about forty minutes.
+  All three runs were judged usable and were retained for analysis.
+
+Question: what was the air temperature during run 13, in degrees Celsius?
+
+Answer using only the passage above.

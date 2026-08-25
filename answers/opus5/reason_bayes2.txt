@@ -1,0 +1,20 @@
+Let D be the event the condition is present, and let "++" be positive on both tests.
+
+Prior:
+- P(D) = 0.02, P(not D) = 0.98
+
+Likelihoods, using conditional independence given true status:
+- P(++ | D) = sensitivity_A x sensitivity_B = 0.95 x 0.80 = 0.76
+- P(++ | not D) = (1 - specificity_A) x (1 - specificity_B) = 0.10 x 0.03 = 0.003
+
+Joint probabilities:
+- P(D and ++) = 0.02 x 0.76 = 0.0152
+- P(not D and ++) = 0.98 x 0.003 = 0.00294
+- P(++) = 0.0152 + 0.00294 = 0.01814
+
+Posterior:
+P(D | ++) = 0.0152 / 0.01814 = 760/907 = 0.83793...
+
+Rounded to three decimal places: 0.838.
+
+ANSWER: 0.838

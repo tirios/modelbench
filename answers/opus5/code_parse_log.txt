@@ -1,0 +1,46 @@
+```python
+import re
+
+_LINE_RE = re.compile(
+    r"""
+    ^[ \t]*
+    (?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)[ \t]+
+    run=(?P<run>[+-]?\d+)[ \t]+
+    ch=(?P<ch>\S+)[ \t]+
+    val=(?P<val>nan|[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)[ \t]+
+    flag=(?P<flag>\S+)
+    [ \t]*$
+    """,
+    re.VERBOSE,
+)
+
+
+def parse(lines):
+    """Parse well-formed log lines into dicts, skipping anything malformed."""
+    records = []
+    if lines is None:
+        return records
+    try:
+        iterator = iter(lines)
+    except TypeError:
+        return records
+    for line in iterator:
+        if not isinstance(line, str):
+            continue
+        match = _LINE_RE.match(line.rstrip("\r\n"))
+        if match is None:
+            continue
+        raw_val = match.group("val")
+        try:
+            record = {
+                "ts": match.group("ts"),
+                "run": int(match.group("run")),
+                "ch": match.group("ch"),
+                "val": None if raw_val == "nan" else float(raw_val),
+                "flag": match.group("flag"),
+            }
+        except (TypeError, ValueError):
+            continue
+        records.append(record)
+    return records
+```

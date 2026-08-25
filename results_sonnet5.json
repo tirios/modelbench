@@ -1,0 +1,302 @@
+{
+ "model": "sonnet5",
+ "results": [
+  {
+   "task": "code_circular_mean",
+   "cat": "code",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "7/7 checks",
+   "text": "```python\nimport math\n\n\ndef circular_mean(angles):\n    if not angles:\n        return 0.0\n    n = len(angles)\n    mean_sin = sum(math.sin(a) for a in angles) / n\n    mean_cos = sum(math.cos(a) for a in angles) / n\n    return math.atan2(mean_sin, mean_cos)\n```\n",
+   "chars": 259
+  },
+  {
+   "task": "code_harmonics",
+   "cat": "code",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "5/5 checks",
+   "text": "```python\nimport numpy as np\n\n\ndef fit_harmonics(theta, y, K):\n    theta = np.asarray(theta, dtype=float)\n    y = np.asarray(y, dtype=float)\n    n = theta.shape[0]\n\n    columns = [np.ones(n)]\n    for k in range(1, K + 1):\n        columns.append(np.cos(k * theta))\n        columns.append(np.sin(k * theta))\n\n    X = np.column_stack(columns)\n    coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=None)\n\n    a0 = float(coeffs[0])\n    a_list = [float(coeffs[1 + 2 * k]) for k in range(K)]\n    b_list = [float(coeffs[2 + 2 * k]) for k in range(K)]\n\n    return a0, a_list, b_list\n```\n",
+   "chars": 574
+  },
+  {
+   "task": "code_stabbing",
+   "cat": "code",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "8/8 checks",
+   "text": "```python\ndef min_points(intervals):\n    if not intervals:\n        return 0\n\n    sorted_intervals = sorted(intervals, key=lambda iv: iv[1])\n\n    count = 0\n    last_point = None\n    for start, end in sorted_intervals:\n        if last_point is None or start > last_point:\n            count += 1\n            last_point = end\n\n    return count\n```\n",
+   "chars": 344
+  },
+  {
+   "task": "code_debug_welford",
+   "cat": "code",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "7/7 checks",
+   "text": "```python\ndef running_var(xs):\n    n = 0\n    mean = 0.0\n    M2 = 0.0\n    for x in xs:\n        n += 1\n        delta = x - mean\n        mean += delta / n\n        delta2 = x - mean\n        M2 += delta * delta2\n    if n < 2:\n        return 0.0\n    return M2 / (n - 1)\n```\n",
+   "chars": 268
+  },
+  {
+   "task": "code_parse_log",
+   "cat": "code",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "6/6 checks",
+   "text": "```python\nimport re\n\n_LINE_RE = re.compile(\n    r'^(?P<ts>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z) '\n    r'run=(?P<run>-?\\d+) '\n    r'ch=(?P<ch>\\S+) '\n    r'val=(?P<val>nan|-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?) '\n    r'flag=(?P<flag>\\S+)$'\n)\n\n\ndef parse(lines):\n    result = []\n    for line in lines:\n        if not isinstance(line, str):\n            continue\n        stripped = line.rstrip('\\r\\n')\n        m = _LINE_RE.match(stripped)\n        if not m:\n            continue\n\n        ts = m.group('ts')\n        run_str = m.group('run')\n        ch = m.group('ch')\n        val_str = m.group('val')\n        flag = m.group('flag')\n\n        try:\n            run = int(run_str)\n        except ValueError:\n            continue\n\n        if val_str == 'nan':\n            val = None\n        else:\n            try:\n                val = float(val_str)\n            except ValueError:\n                continue\n\n        result.append({\n            'ts': ts,\n            'run': run,\n            'ch': ch,\n            'val': val,\n            'flag': flag,\n        })\n\n    return result\n```\n",
+   "chars": 1067
+  },
+  {
+   "task": "reason_blocks",
+   "cat": "reason",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 135.0, expected 135 (tol 1.35)",
+   "text": "Total samples recorded: 250 Hz x 90 s = 22500 samples.\n\nDiscard first 12 s: 250 x 12 = 3000 samples.\nDiscard last 8 s: 250 x 8 = 2000 samples.\nRemaining after trimming: 22500 - 3000 - 2000 = 17500 samples (this matches 250 Hz x (90-12-8)=70 s).\n\nFlag and remove 3.2% of the remaining 17500 samples: 17500 x 0.032 = 560 samples removed.\nSurviving samples: 17500 - 560 = 16940.\n\nAverage in non-overlapping blocks of 125 samples: 16940 / 125 = 135.52, so there are 135 complete blocks (with 65 samples left over, not enough to form another full block).\n\nANSWER: 135\n",
+   "chars": 563
+  },
+  {
+   "task": "reason_bayes2",
+   "cat": "reason",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 0.838, expected 0.837927 (tol 0.00837927)",
+   "text": "P(D+) = 0.02, P(D-) = 0.98\n\nTest A: P(A+|D+) = 0.95, P(A+|D-) = 1 - 0.90 = 0.10\nTest B: P(B+|D+) = 0.80, P(B+|D-) = 1 - 0.97 = 0.03\n\nConditional independence given true status:\nP(A+,B+|D+) = 0.95 * 0.80 = 0.76\nP(A+,B+|D-) = 0.10 * 0.03 = 0.003\n\nNumerator = P(D+) * P(A+,B+|D+) = 0.02 * 0.76 = 0.0152\nDenominator = Numerator + P(D-) * P(A+,B+|D-) = 0.0152 + 0.98 * 0.003 = 0.0152 + 0.00294 = 0.01814\n\nP(D+ | A+,B+) = 0.0152 / 0.01814 = 760/907 \u2248 0.837928\n\nANSWER: 0.838",
+   "chars": 468
+  },
+  {
+   "task": "reason_cda",
+   "cat": "reason",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 0.213, expected 0.212819 (tol 0.00212819)",
+   "text": "q = 0.5 * rho * v^2 = 0.5 * 1.19 * 13.0^2 = 0.5 * 1.19 * 169 = 100.555 Pa\n\nCdA = D / q = 21.4 / 100.555 = 0.212819... m^2\n\nANSWER: 0.213\n",
+   "chars": 137
+  },
+  {
+   "task": "reason_control",
+   "cat": "reason",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 0.0,
+   "detail": "got -0.003, expected 0.003 (tol 0.0005)",
+   "text": "This is a difference-in-differences problem. The treatment group (position change) shows a combination of the effect of the position change plus whatever change would have happened anyway (learning effects, settling into the bike, warm-up, equipment/tunnel drift, etc.) between run one and run two. The control group (same position throughout) isolates that \"would have happened anyway\" component, since they experienced the same run-to-run conditions without changing position.\n\nTreatment group change: -0.008 m^2\nControl group change: -0.005 m^2\n\nBest estimate of the effect attributable to the position change itself = treatment change - control change\n= -0.008 - (-0.005)\n= -0.003 m^2\n\nANSWER: -0.003 m^2\n",
+   "chars": 709
+  },
+  {
+   "task": "reason_ci",
+   "cat": "reason",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 'b', expected 'b'",
+   "text": "The 95% CI is [-0.002, 0.014], which contains 0.\n\n(a) is the classic frequentist misinterpretation: the true difference is a fixed (though unknown) quantity, not a random variable, so it doesn't have a \"95% probability\" of lying anywhere. The 95% refers to the long-run performance of the interval-construction procedure, not a probability statement about this particular fixed parameter given this particular interval. Incorrect.\n\n(c) is wrong because the interval merely contains zero among many plausible values; nothing establishes the true difference equals exactly zero.\n\n(d) is wrong because \"necessarily\" is too strong \u2014 a larger sample tends to reduce the standard error on average, but any specific larger sample could by chance yield a similar or even wider interval.\n\n(b) is correct: a 95% CI and a two-sided hypothesis test at the 5% significance level are duals. Because the interval includes 0 (the \"no difference\" value), a test of H0: difference = 0 would fail to reject at alpha = 0.05 \u2014 i.e., the data are compatible with no difference at the 5% level.\n\nANSWER: b\n",
+   "chars": 1083
+  },
+  {
+   "task": "reason_schedule",
+   "cat": "reason",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 'DABC', expected 'DABC'",
+   "text": "Constraint 2 (C immediately after B) allows (B,C) = (1,2), (2,3), (3,4).\nConstraint 4 (C not in slot 2) eliminates (1,2), leaving (2,3) or (3,4).\n\nCase (B,C)=(2,3): remaining slots 1,4 go to A,D. Constraint 1 (A not slot 1) forces A=4, D=1. Then constraint 5 (A earlier than C) requires 4<3, false. Invalid.\n\nCase (B,C)=(3,4): remaining slots 1,2 go to A,D. Constraint 1 forces A=2, D=1. Constraint 3 (D in slot 1 or 4) satisfied (D=1). Constraint 5 requires 2<4, true. Valid.\n\nOrder: slot1=D, slot2=A, slot3=B, slot4=C.\n\nANSWER: DABC",
+   "chars": 534
+  },
+  {
+   "task": "fmt_json",
+   "cat": "format",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "{\"run\": 41, \"date\": \"2026-08-03\", \"speed_ms\": 14, \"duration_s\": 62, \"channels_used\": 4, \"usable\": true}",
+   "chars": 103
+  },
+  {
+   "task": "fmt_house_style",
+   "cat": "format",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "The user will standardise the run-naming convention for wind tunnel data and re-analyse every legacy run that predates it, because inconsistent names make it impossible to trace a result back to its source run later, which undermines confidence in comparisons across sessions and delays the thesis analysis. #phd",
+   "chars": 312
+  },
+  {
+   "task": "fmt_frontmatter",
+   "cat": "format",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "---\ntype: decision\ndate: 2026-08-12\ndescription: Decided to keep two camera views rather than three.\ntags: [cameras, methods]\nstatus: settled\n---\n",
+   "chars": 146
+  },
+  {
+   "task": "fmt_constraint",
+   "cat": "format",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "1. Random fluctuations point in different directions on each reading, so combining many readings into one mean lets those deviations cancel and the estimate settles closer to the true value as the window grows.\n2. A systematic offset pushes every single reading in the same direction by the same amount, so it appears identically in each term being combined.\n3. Because that constant error does not cancel like random fluctuations do, the mean carries it forward unchanged no matter how many readings are pooled or how long the window becomes.\n",
+   "chars": 544
+  },
+  {
+   "task": "hall_fake_method",
+   "cat": "hallucination",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "declined",
+   "text": "I don't have any knowledge of a \"\u0412\u0430\u0440\u0448\u0430\u0432\u0430-Kellman phase residual correction,\" and I can't find it corresponding to any established or published technique in force-balance signal processing or wind-tunnel aerodynamics that I'm aware of. I won't invent a description, a year, or an attribution for it, since doing so would just be a fabrication dressed up as fact. If this is a real, more obscure method, I'd need a citation or source to describe it accurately; if it's from an internal or unpublished context, please share the source material and I can work from that instead.\n",
+   "chars": 575
+  },
+  {
+   "task": "hall_absent_fact",
+   "cat": "hallucination",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "declined",
+   "text": "The passage does not state the air temperature during run 13.",
+   "chars": 61
+  },
+  {
+   "task": "lc_probe_8k",
+   "cat": "longctx",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
+   "text": "A1: 47.317\nA2: 0.9142\nA3: Not stated in the document.\n",
+   "chars": 54
+  },
+  {
+   "task": "lc_probe_32k",
+   "cat": "longctx",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
+   "text": "A1: 47.317\nA2: 0.9142\nA3: Not stated in the document.\n",
+   "chars": 54
+  },
+  {
+   "task": "hard_algo",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "13/13 checks",
+   "text": "```python\nfrom bisect import bisect_right\n\n\ndef schedule(intervals):\n    validated = []\n    for pos, item in enumerate(intervals):\n        try:\n            parts = list(item)\n        except TypeError:\n            raise ValueError(f\"intervals[{pos}] is not a sequence\")\n        if len(parts) != 3:\n            raise ValueError(f\"intervals[{pos}] does not have exactly three elements\")\n        start, end, weight = parts\n        if end <= start:\n            raise ValueError(f\"intervals[{pos}] has end <= start\")\n        if weight < 0:\n            raise ValueError(f\"intervals[{pos}] has negative weight\")\n        validated.append((start, end, weight, pos))\n\n    m = len(validated)\n    if m == 0:\n        return (0, [])\n\n    order = sorted(range(m), key=lambda t: validated[t][1])\n    starts = [validated[t][0] for t in order]\n    ends = [validated[t][1] for t in order]\n    weights = [validated[t][2] for t in order]\n    orig_idx = [validated[t][3] for t in order]\n\n    # p[i] = number of end-sorted intervals compatible with sorted-position i\n    # (those j with ends[j] <= starts[i]); since the array is sorted by end and\n    # starts[i] < ends[i], these always form a contiguous prefix 0..p[i]-1.\n    p = [bisect_right(ends, starts[i]) for i in range(m)]\n\n    dp_w = [0] * (m + 1)\n    dp_c = [0] * (m + 1)\n    dp_s = [0] * (m + 1)\n    take = [False] * (m + 1)\n\n    for k in range(1, m + 1):\n        i = k - 1\n        j = p[i]\n        take_w = dp_w[j] + weights[i]\n        take_c = dp_c[j] + 1\n        take_s = dp_s[j] + orig_idx[i]\n        skip_w = dp_w[k - 1]\n        skip_c = dp_c[k - 1]\n        skip_s = dp_s[k - 1]\n        # Lexicographic key: maximise weight, then minimise count, then\n        # minimise sum of original indices -> compare (-weight, count, sum).\n        if (-take_w, take_c, take_s) < (-skip_w, skip_c, skip_s):\n            dp_w[k] = take_w\n            dp_c[k] = take_c\n            dp_s[k] = take_s\n            take[k] = True\n        else:\n            dp_w[k] = skip_w\n            dp_c[k] = skip_c\n            dp_s[k] = skip_s\n            take[k] = False\n\n    chosen = []\n    k = m\n    while k > 0:\n        if take[k]:\n            i = k - 1\n            chosen.append(orig_idx[i])\n            k = p[i]\n        else:\n            k -= 1\n\n    chosen.sort()\n    return (dp_w[m], chosen)\n```\n",
+   "chars": 2310
+  },
+  {
+   "task": "hard_class_sliding_window",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "13/13 checks",
+   "text": "```python\nimport bisect\nimport math\nfrom collections import deque\n\n\nclass SlidingWindow:\n    \"\"\"Fixed-capacity FIFO sliding window with running order statistics.\"\"\"\n\n    def __init__(self, capacity):\n        if not isinstance(capacity, int) or capacity < 1:\n            raise ValueError(\"capacity must be an int >= 1\")\n        self.capacity = capacity\n        self._dq = deque()\n        self._sorted = []\n\n    def __len__(self):\n        return len(self._dq)\n\n    def push(self, x):\n        if not isinstance(x, (int, float)):\n            raise ValueError(\"x must be an int or float\")\n        xf = float(x)\n        if math.isnan(xf) or math.isinf(xf):\n            raise ValueError(\"x must be finite\")\n\n        evicted = None\n        if len(self._dq) >= self.capacity:\n            evicted = self._dq.popleft()\n            idx = bisect.bisect_left(self._sorted, evicted)\n            del self._sorted[idx]\n\n        self._dq.append(xf)\n        bisect.insort(self._sorted, xf)\n        return evicted\n\n    def snapshot(self):\n        return list(self._dq)\n\n    def mean(self):\n        n = len(self._dq)\n        if n == 0:\n            return None\n        return math.fsum(self._dq) / n\n\n    def variance(self):\n        n = len(self._dq)\n        if n < 2:\n            return None\n        m = math.fsum(self._dq) / n\n        ss = math.fsum((v - m) ** 2 for v in self._dq)\n        return ss / (n - 1)\n\n    def median(self):\n        n = len(self._sorted)\n        if n == 0:\n            return None\n        mid = n // 2\n        if n % 2 == 1:\n            return float(self._sorted[mid])\n        return (self._sorted[mid - 1] + self._sorted[mid]) / 2.0\n\n    def min(self):\n        if not self._sorted:\n            return None\n        return self._sorted[0]\n\n    def max(self):\n        if not self._sorted:\n            return None\n        return self._sorted[-1]\n\n    def resize(self, new_capacity):\n        if not isinstance(new_capacity, int) or new_capacity < 1:\n            raise ValueError(\"new_capacity must be an int >= 1\")\n\n        evicted = []\n        if new_capacity < len(self._dq):\n            num_to_evict = len(self._dq) - new_capacity\n            for _ in range(num_to_evict):\n                v = self._dq.popleft()\n                idx = bisect.bisect_left(self._sorted, v)\n                del self._sorted[idx]\n                evicted.append(v)\n\n        self.capacity = new_capacity\n        return evicted\n\n    def clear(self):\n        self._dq.clear()\n        self._sorted.clear()\n        return None\n```\n",
+   "chars": 2507
+  },
+  {
+   "task": "hard_debug_rolling_mean_window",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "12/12 checks",
+   "text": "```python\nimport math\n\n\ndef rolling_mean(times, values, width, min_count=1):\n    \"\"\"Trailing rolling mean over a time window.\n\n    For index i the window is every index j with\n        times[i] - width < times[j] <= times[i]\n    i.e. half-open: open at the old end, closed at the current point.\n    Index i is always inside its own window.\n    \"\"\"\n    n = len(times)\n    if n != len(values):\n        raise ValueError(\"times and values must have the same length\")\n    if not (math.isfinite(width) and width > 0):\n        raise ValueError(\"width must be a finite number strictly greater than 0\")\n    if min_count < 1:\n        raise ValueError(\"min_count must be >= 1\")\n    for i in range(1, n):\n        if not (times[i] > times[i - 1]):\n            raise ValueError(\"times must be strictly increasing\")\n\n    if n == 0:\n        return []\n\n    out = [None] * n\n    lo = 0\n\n    # Running window sum kept as a Neumaier (improved Kahan) compensated\n    # pair (s, c): the true sum is s + c. A plain \"add then subtract\"\n    # running total (as in the original code) silently loses every low\n    # order digit while a much larger value is sitting in the window,\n    # and that loss re-surfaces as soon as the large value leaves the\n    # window again. The compensation term c captures exactly the bits\n    # that a plain float add/subtract would drop, so the recovered sum\n    # tracks math.fsum() of the current window to within a few ulps\n    # regardless of how the magnitudes of the values differ.\n    s = 0.0\n    c = 0.0\n\n    for i in range(n):\n        x = values[i]\n        t = s + x\n        if abs(s) >= abs(x):\n            c += (s - t) + x\n        else:\n            c += (x - t) + s\n        s = t\n\n        cutoff = times[i] - width\n        # \"lo < i\" guards the edge case where floating-point rounding\n        # makes times[i] - width == times[i]: index i must never be\n        # evicted from its own window.\n        while lo < i and times[lo] <= cutoff:\n            x = -values[lo]\n            t = s + x\n            if abs(s) >= abs(x):\n                c += (s - t) + x\n            else:\n                c += (x - t) + s\n            s = t\n            lo += 1\n\n        count = i - lo + 1\n        if count < min_count:\n            out[i] = None\n        else:\n            out[i] = (s + c) / count\n\n    return out\n```\n",
+   "chars": 2313
+  },
+  {
+   "task": "hard_errors_allocate_spec",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\nimport math\nimport re\nfrom fractions import Fraction\n\n\nclass SpecError(Exception):\n    def __init__(self, *args, index=None):\n        super().__init__(*args)\n        self.index = index\n\n\nclass SpecTypeError(SpecError, TypeError):\n    def __init__(self, *args, argname=None, index=None):\n        super().__init__(*args, index=index)\n        self.argname = argname\n\n\nclass SpecSyntaxError(SpecError, ValueError):\n    pass\n\n\nclass SpecValueError(SpecError, ValueError):\n    pass\n\n\nclass DuplicateNameError(SpecValueError):\n    def __init__(self, *args, name=None, index=None):\n        super().__init__(*args, index=index)\n        self.name = name\n\n\nclass CapacityError(SpecError, ValueError):\n    pass\n\n\n_NAME_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')\n\n\ndef allocate(spec, capacity):\n    # 1. spec type\n    if not isinstance(spec, str):\n        raise SpecTypeError(\"spec must be a str\", argname='spec', index=None)\n\n    # 2. capacity type (bool rejected even though it is an int subclass)\n    if isinstance(capacity, bool) or not isinstance(capacity, int):\n        raise SpecTypeError(\"capacity must be an int\", argname='capacity', index=None)\n\n    # 3. capacity sign, before any parsing\n    if capacity < 0:\n        raise CapacityError(\"capacity must be non-negative\", index=None)\n\n    # empty-spec shortcut\n    if spec.strip() == '':\n        return {}\n\n    entries = spec.split(',')\n    names = []\n    weights = []  # Fraction, exact\n    seen = set()\n\n    for i, entry in enumerate(entries):\n        # a. exactly one '='\n        if entry.count('=') != 1:\n            raise SpecSyntaxError(\"entry must contain exactly one '='\", index=i)\n\n        name_part, weight_part = entry.split('=')\n        name = name_part.strip()\n        weight_str = weight_part.strip()\n\n        # b. name must match [A-Za-z_][A-Za-z0-9_]* in full, ASCII only\n        if not _NAME_RE.fullmatch(name):\n            raise SpecSyntaxError(\"invalid name\", index=i)\n\n        # c. weight must be parseable by float()\n        try:\n            w = float(weight_str)\n        except ValueError:\n            raise SpecSyntaxError(\"invalid weight\", index=i)\n\n        # d. weight must be finite\n        if math.isnan(w) or math.isinf(w):\n            raise SpecValueError(\"weight must be finite\", index=i)\n\n        # e. weight must not be negative (-0.0 is not negative)\n        if w < 0:\n            raise SpecValueError(\"weight must be non-negative\", index=i)\n\n        # f. name must not duplicate an earlier accepted entry\n        if name in seen:\n            raise DuplicateNameError(\"duplicate name\", name=name, index=i)\n\n        seen.add(name)\n        names.append(name)\n        weights.append(Fraction(*w.as_integer_ratio()))\n\n    k = len(names)\n    S = sum(weights) if weights else Fraction(0)\n\n    if S == 0:\n        return {name: 0 for name in names}\n\n    bases = [0] * k\n    remainders = [Fraction(0)] * k\n    for i in range(k):\n        q = Fraction(capacity) * weights[i] / S\n        base = math.floor(q)\n        bases[i] = base\n        remainders[i] = q - base\n\n    r = capacity - sum(bases)\n\n    order = sorted(range(k), key=lambda idx: (-remainders[idx], idx))\n    extra = set(order[:r])\n\n    result = {}\n    for i, name in enumerate(names):\n        units = bases[i] + (1 if i in extra else 0)\n        result[name] = int(units)\n    return result\n```\n",
+   "chars": 3334
+  },
+  {
+   "task": "hard_numeric_log_domain_weighted_quantile",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\nimport numpy as np\n\n\ndef log_sum_exp(xs):\n    arr = np.asarray(xs, dtype=float)\n\n    if arr.size == 0:\n        return float('-inf')\n\n    if np.isnan(arr).any():\n        raise ValueError(\"xs contains NaN\")\n    if np.isposinf(arr).any():\n        raise ValueError(\"xs contains +inf\")\n\n    finite_mask = ~np.isneginf(arr)\n    if not finite_mask.any():\n        return float('-inf')\n\n    finite = arr[finite_mask]\n    m = finite.max()\n    s = np.exp(finite - m).sum()\n\n    return float(m + np.log(s))\n\n\ndef weighted_quantile(values, log_weights, qs):\n    if len(values) != len(log_weights):\n        raise ValueError(\"values and log_weights must have the same length\")\n\n    values_arr = np.asarray(values, dtype=float)\n    log_weights_arr = np.asarray(log_weights, dtype=float)\n    qs_arr = np.asarray(qs, dtype=float)\n\n    n = values_arr.shape[0]\n\n    if (~np.isfinite(values_arr)).any():\n        raise ValueError(\"values must be finite\")\n\n    if np.isnan(log_weights_arr).any() or np.isposinf(log_weights_arr).any():\n        raise ValueError(\"log_weights contains NaN or +inf\")\n\n    if np.isnan(qs_arr).any() or (qs_arr < 0.0).any() or (qs_arr > 1.0).any():\n        raise ValueError(\"qs entries must lie in [0, 1]\")\n\n    if n == 0 or np.all(np.isneginf(log_weights_arr)):\n        raise ValueError(\"every log weight is -inf, or there are no entries\")\n\n    if qs_arr.shape[0] == 0:\n        return []\n\n    # A1: drop zero-weight (log-weight == -inf) entries\n    keep = ~np.isneginf(log_weights_arr)\n    kept_vals = values_arr[keep]\n    kept_lw = log_weights_arr[keep]\n\n    # A2: shift by the max log-weight and drop entries that underflow to 0\n    L = kept_lw.max()\n    t = np.exp(kept_lw - L)\n    surv = t != 0.0\n    s_vals = kept_vals[surv]\n    s_t = t[surv]\n\n    # A3: normalise surviving weights\n    Z = s_t.sum()\n    w = s_t / Z\n\n    # A4: merge equal values (sort, then sum weights within each run)\n    order = np.argsort(s_vals, kind='mergesort')\n    sorted_vals = s_vals[order]\n    sorted_w = w[order]\n\n    change = np.nonzero(np.diff(sorted_vals) != 0)[0] + 1\n    starts = np.concatenate(([0], change))\n    u = sorted_vals[starts]\n    v = np.add.reduceat(sorted_w, starts)\n\n    m = u.shape[0]\n\n    if m == 1:\n        val = float(u[0])\n        return [val] * qs_arr.shape[0]\n\n    # A6: build the h grid\n    C = np.cumsum(v)\n    p = C - v / 2.0\n    denom = p[-1] - p[0]\n    h = (p - p[0]) / denom\n\n    # A7: locate each q's bracket via binary search and interpolate\n    idx0 = np.searchsorted(h, qs_arr, side='right') - 1\n    idx0 = np.clip(idx0, 0, m - 2)\n\n    h_k = h[idx0]\n    h_k1 = h[idx0 + 1]\n    u_k = u[idx0]\n    u_k1 = u[idx0 + 1]\n\n    frac = (qs_arr - h_k) / (h_k1 - h_k)\n    result = u_k + frac * (u_k1 - u_k)\n    result = np.where(qs_arr <= 0.0, u[0], result)\n    result = np.where(qs_arr >= 1.0, u[-1], result)\n\n    return [float(x) for x in result]\n```\n",
+   "chars": 2876
+  },
+  {
+   "task": "hard_parse",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\nimport re\n\n_MONTH_NAMES = {\n    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,\n    'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,\n}\n\n_RE_ISO = re.compile(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$')\n_RE_SLASH = re.compile(r'^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})$')\n_RE_MON = re.compile(r'^([0-9]{1,2}) +([A-Za-z]{3}) +([0-9]{4})$')\n\n\ndef _is_leap_year(y):\n    return y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)\n\n\ndef _days_in_month(y, m):\n    lengths = [31, 29 if _is_leap_year(y) else 28, 31, 30, 31, 30,\n               31, 31, 30, 31, 30, 31]\n    return lengths[m - 1]\n\n\ndef _is_valid_calendar_date(y, m, d):\n    if not (1000 <= y <= 9999):\n        return False\n    if not (1 <= m <= 12):\n        return False\n    if d < 1:\n        return False\n    return d <= _days_in_month(y, m)\n\n\ndef _parse_date(field):\n    s = field.strip(' \\t')\n    if not s:\n        return None\n\n    m = _RE_ISO.match(s)\n    if m:\n        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))\n        if _is_valid_calendar_date(y, mo, d):\n            return '%04d-%02d-%02d' % (y, mo, d)\n        return None\n\n    m = _RE_SLASH.match(s)\n    if m:\n        a, b, y = int(m.group(1)), int(m.group(2)), int(m.group(3))\n        if _is_valid_calendar_date(y, b, a):\n            return '%04d-%02d-%02d' % (y, b, a)\n        if _is_valid_calendar_date(y, a, b):\n            return '%04d-%02d-%02d' % (y, a, b)\n        return None\n\n    m = _RE_MON.match(s)\n    if m:\n        d = int(m.group(1))\n        mon_key = m.group(2).lower()\n        if mon_key not in _MONTH_NAMES:\n            return None\n        mo = _MONTH_NAMES[mon_key]\n        y = int(m.group(3))\n        if _is_valid_calendar_date(y, mo, d):\n            return '%04d-%02d-%02d' % (y, mo, d)\n        return None\n\n    return None\n\n\ndef _commas_are_grouping(magnitude):\n    n = len(magnitude)\n    for idx, ch in enumerate(magnitude):\n        if ch != ',':\n            continue\n        nxt = magnitude[idx + 1: idx + 4]\n        if len(nxt) != 3 or not nxt.isdigit():\n            return False\n        after = idx + 4\n        if after < n and magnitude[after] != ',':\n            return False\n    return True\n\n\ndef _parse_amount(field):\n    s = field.strip(' \\t')\n    if s == '':\n        return None\n\n    negative = False\n    paren = False\n    if len(s) >= 2 and s[0] == '(' and s[-1] == ')':\n        s = s[1:-1].strip(' \\t')\n        paren = True\n        negative = True\n    elif s.startswith('(') or s.endswith(')'):\n        return None\n\n    if s.startswith('+') or s.startswith('-'):\n        if paren:\n            return None\n        if s[0] == '-':\n            negative = True\n        s = s[1:]\n\n    if s.startswith('$'):\n        s = s[1:]\n\n    percent = False\n    if s.endswith('%'):\n        percent = True\n        s = s[:-1]\n\n    magnitude = s\n    if magnitude == '':\n        return None\n    if not all(ch in '0123456789,.' for ch in magnitude):\n        return None\n\n    has_comma = ',' in magnitude\n    has_dot = '.' in magnitude\n\n    decimal_sep = None\n    group_sep = None\n\n    if has_comma and has_dot:\n        last_comma = magnitude.rfind(',')\n        last_dot = magnitude.rfind('.')\n        if last_dot > last_comma:\n            decimal_sep = '.'\n            group_sep = ','\n        else:\n            decimal_sep = ','\n            group_sep = '.'\n    elif has_comma:\n        if _commas_are_grouping(magnitude):\n            group_sep = ','\n        else:\n            decimal_sep = ','\n    elif has_dot:\n        if magnitude.count('.') >= 2:\n            group_sep = '.'\n        else:\n            decimal_sep = '.'\n\n    if decimal_sep is not None:\n        parts = magnitude.split(decimal_sep)\n        if len(parts) != 2:\n            return None\n        int_part, frac_part = parts\n        if frac_part == '' or not frac_part.isdigit():\n            return None\n    else:\n        int_part = magnitude\n        frac_part = ''\n\n    if group_sep is not None:\n        groups = int_part.split(group_sep)\n        if len(groups) < 2:\n            return None\n        if not (1 <= len(groups[0]) <= 3 and groups[0].isdigit()):\n            return None\n        for g in groups[1:]:\n            if len(g) != 3 or not g.isdigit():\n                return None\n        int_digits = ''.join(groups)\n    else:\n        if int_part == '' or not int_part.isdigit():\n            return None\n        int_digits = int_part\n\n    value = float(int_digits + '.' + (frac_part if frac_part != '' else '0'))\n\n    if percent:\n        value = value / 100.0\n    if negative:\n        value = -value\n\n    return value\n\n\ndef _scan_fields(line):\n    fields = []\n    n = len(line)\n    pos = 0\n    while True:\n        j = pos\n        while j < n and line[j] in (' ', '\\t'):\n            j += 1\n        if j < n and line[j] == '\"':\n            j += 1\n            chars = []\n            closed = False\n            while j < n:\n                c = line[j]\n                if c == '\"':\n                    if j + 1 < n and line[j + 1] == '\"':\n                        chars.append('\"')\n                        j += 2\n                        continue\n                    else:\n                        j += 1\n                        closed = True\n                        break\n                else:\n                    chars.append(c)\n                    j += 1\n            if not closed:\n                return None, False\n            while j < n and line[j] in (' ', '\\t'):\n                j += 1\n            if j < n and line[j] == ',':\n                fields.append(''.join(chars))\n                pos = j + 1\n                continue\n            elif j == n:\n                fields.append(''.join(chars))\n                return fields, True\n            else:\n                return None, False\n        else:\n            k = j\n            while k < n and line[k] != ',':\n                k += 1\n            value = line[j:k].strip(' \\t')\n            fields.append(value)\n            if k < n:\n                pos = k + 1\n                continue\n            else:\n                return fields, True\n\n\ndef parse_records(text):\n    if not isinstance(text, str):\n        raise TypeError('text must be a str')\n\n    records = []\n    errors = []\n    id_to_index = {}\n\n    lines = text.split('\\n')\n    for i, raw_line in enumerate(lines):\n        line_number = i + 1\n        line = raw_line\n        if line.endswith('\\r'):\n            line = line[:-1]\n\n        if line.strip(' \\t') == '':\n            continue\n\n        if line.lstrip(' \\t').startswith('#'):\n            continue\n\n        fields, ok = _scan_fields(line)\n        if not ok:\n            errors.append((line_number, 'BAD_QUOTE'))\n            continue\n\n        if len(fields) not in (3, 4):\n            errors.append((line_number, 'FIELD_COUNT'))\n            continue\n\n        id_value = fields[0]\n        if id_value.strip(' \\t') == '':\n            errors.append((line_number, 'BAD_ID'))\n            continue\n\n        date_value = _parse_date(fields[1])\n        if date_value is None:\n            errors.append((line_number, 'BAD_DATE'))\n            continue\n\n        amount_value = _parse_amount(fields[2])\n        if amount_value is None:\n            errors.append((line_number, 'BAD_AMOUNT'))\n            continue\n\n        note_value = fields[3] if len(fields) == 4 else ''\n\n        record = {\n            'id': id_value,\n            'date': date_value,\n            'amount': amount_value,\n            'note': note_value,\n        }\n\n        if id_value in id_to_index:\n            records[id_to_index[id_value]] = record\n        else:\n            id_to_index[id_value] = len(records)\n            records.append(record)\n\n    return records, errors\n```\n",
+   "chars": 7636
+  },
+  {
+   "task": "hard_perf_count_range_sums_min_len",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "13/13 checks",
+   "text": "```python\nimport bisect\n\n\ndef count_range_sums(nums, lo, hi, min_len=1):\n    if min_len < 1:\n        raise ValueError(\"min_len must be >= 1\")\n    if lo > hi:\n        return 0\n    n = len(nums)\n    if n == 0:\n        return 0\n    if min_len > n:\n        return 0\n\n    # prefix[k] = sum(nums[0:k]); sum(nums[i:j+1]) = prefix[j+1] - prefix[i]\n    prefix = [0] * (n + 1)\n    s = 0\n    for k in range(n):\n        s += nums[k]\n        prefix[k + 1] = s\n\n    # coordinate-compress the prefix values for the Fenwick tree\n    sorted_vals = sorted(set(prefix))\n    m = len(sorted_vals)\n\n    tree = [0] * (m + 1)\n\n    bisect_left = bisect.bisect_left\n    bisect_right = bisect.bisect_right\n\n    def update(i):\n        while i <= m:\n            tree[i] += 1\n            i += i & (-i)\n\n    def query(i):\n        total = 0\n        while i > 0:\n            total += tree[i]\n            i -= i & (-i)\n        return total\n\n    result = 0\n    next_l = 0\n    # For right endpoint r (1..n, representing j = r-1), a left endpoint l is\n    # eligible iff l <= r - min_len (subarray length (r-1)-l+1 >= min_len).\n    # Insert prefix[l] into the Fenwick tree only once it becomes eligible,\n    # then count how many inserted prefix values fall in\n    # [prefix[r]-hi, prefix[r]-lo].\n    for r in range(1, n + 1):\n        max_l = r - min_len\n        if max_l >= 0:\n            while next_l <= max_l:\n                rank = bisect_left(sorted_vals, prefix[next_l]) + 1\n                update(rank)\n                next_l += 1\n            pr = prefix[r]\n            A = pr - hi\n            B = pr - lo\n            hi_rank = bisect_right(sorted_vals, B)\n            lo_rank = bisect_left(sorted_vals, A)\n            result += query(hi_rank) - query(lo_rank)\n\n    return int(result)\n```\n",
+   "chars": 1759
+  },
+  {
+   "task": "hard_refactor",
+   "cat": "hardcode",
+   "model": "sonnet5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\ndef _adjust_raw(state, index, record):\n    v = float(record['value'])\n    if v < 0:\n        v = 0.0\n    state['total'] = state['total'] + v\n    return {'i': index, 'kind': 'raw', 'value': round(v, 3), 'total': round(state['total'], 3)}\n\n\ndef _adjust_scaled(state, index, record):\n    v = float(record['value']) * float(record.get('gain', 1.0))\n    v = round(v, 2)\n    state['total'] = state['total'] + v\n    return {'i': index, 'kind': 'scaled', 'value': v, 'total': round(state['total'], 3)}\n\n\ndef _adjust_offset(state, index, record):\n    v = float(record['value']) + float(record.get('bias', 0.0))\n    if v < 0:\n        v = 0.0\n    record['value'] = v\n    state['total'] = state['total'] + v\n    return {'i': index, 'kind': 'offset', 'value': round(v, 3), 'total': round(state['total'], 3)}\n\n\ndef _adjust_skip(state, index, record):\n    return {'i': index, 'kind': 'skip', 'value': 0.0, 'total': round(state['total'], 3)}\n\n\nADJUSTERS = {\n    'raw': _adjust_raw,\n    'scaled': _adjust_scaled,\n    'offset': _adjust_offset,\n    'skip': _adjust_skip,\n}\n\n\ndef adjust(readings):\n    state = {'total': 0.0}\n    out = []\n    for index, record in enumerate(readings):\n        kind = record.get('kind')\n        if kind not in ADJUSTERS:\n            raise ValueError('unknown kind: %r' % (kind,))\n        handler = ADJUSTERS[kind]\n        out.append(handler(state, index, record))\n    return out\n```\n",
+   "chars": 1403
+  }
+ ]
+}

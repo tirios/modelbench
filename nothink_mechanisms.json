@@ -1,0 +1,44 @@
+{
+ "task": "hard_algo",
+ "max_tokens": 2000,
+ "model": "qwen/qwen3.8-27b",
+ "note": "A mechanism works only if reasoning_chars is ~0 AND visible_chars is large.",
+ "results": [
+  {
+   "mechanism": "baseline (no suppression)",
+   "reasoning_chars": 8422,
+   "visible_chars": 0,
+   "completion_tokens": 2000
+  },
+  {
+   "mechanism": "reasoning_effort=none",
+   "reasoning_chars": 0,
+   "visible_chars": 7285,
+   "completion_tokens": 2000
+  },
+  {
+   "mechanism": "reasoning_effort=low",
+   "reasoning_chars": 7058,
+   "visible_chars": 0,
+   "completion_tokens": 2000
+  },
+  {
+   "mechanism": "/no_think suffix",
+   "reasoning_chars": 8710,
+   "visible_chars": 0,
+   "completion_tokens": 2000
+  },
+  {
+   "mechanism": "chat_template_kwargs enable_thinking=false",
+   "reasoning_chars": 8712,
+   "visible_chars": 0,
+   "completion_tokens": 2000
+  },
+  {
+   "mechanism": "system instruction to answer immediately",
+   "reasoning_chars": 8476,
+   "visible_chars": 0,
+   "completion_tokens": 2000
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+---
+type: decision
+date: 2026-08-12
+description: Decided to keep two camera views rather than three for the wind tunnel.
+tags:
+  - cameras
+  - methods
+status: settled
+---

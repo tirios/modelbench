@@ -1,0 +1,15 @@
+Write a Python function `parse(lines)`.
+
+Each well-formed line looks exactly like:
+
+    2026-08-01T09:14:22Z run=17 ch=fx val=-12.4 flag=ok
+
+Return a list of dicts, one per well-formed line, in input order, with keys:
+  'ts'   the timestamp string exactly as it appears
+  'run'  an int
+  'ch'   a str
+  'val'  a float, or None if the value is the literal text 'nan'
+  'flag' a str
+
+Skip any line that does not match that shape, including blank lines and lines
+where a field has the wrong type. Do not raise on malformed input.
