@@ -19,7 +19,8 @@
    "gen_tps": 94.97,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": true,
+   "needles_ok": true
   },
   {
    "ctx": 16384,
@@ -39,7 +40,8 @@
    "gen_tps": 92.04,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": true,
+   "needles_ok": true
   },
   {
    "ctx": 24576,
@@ -59,7 +61,8 @@
    "gen_tps": 91.57,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": true,
+   "needles_ok": true
   },
   {
    "ctx": 32768,
@@ -79,7 +82,8 @@
    "gen_tps": 91.76,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": true,
+   "needles_ok": true
   },
   {
    "ctx": 49152,
@@ -99,7 +103,8 @@
    "gen_tps": 88.6,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": true,
+   "needles_ok": true
   },
   {
    "ctx": 65536,
@@ -119,7 +124,8 @@
    "gen_tps": 85.25,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": true,
+   "needles_ok": true
   },
   {
    "ctx": 98304,
@@ -139,7 +145,8 @@
    "gen_tps": 73.74,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": false,
+   "needles_ok": true
   },
   {
    "ctx": 131072,
@@ -159,7 +166,9 @@
    "gen_tps": 9.38,
    "needle_score": 1.0,
    "needle_detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
-   "usable": true
+   "usable": false,
+   "needles_ok": true
   }
- ]
+ ],
+ "verdict_rule": "usable = loads AND resident AND fast AND needles_ok; corrected 2026-08-26, previously needles only"
 }

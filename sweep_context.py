@@ -118,10 +118,23 @@ def rung(n_ctx, best_tps):
         rec["gen_tps"] = r["tok_per_s"]
         rec["needle_score"] = round(score, 2)
         rec["needle_detail"] = detail[:150]
-        rec["usable"] = bool(score >= 0.99)
+        rec["needles_ok"] = bool(score >= 0.99)
     except Exception as e:
-        rec["usable"] = False
+        rec["needles_ok"] = False
         rec["long_error"] = f"{type(e).__name__}: {str(e)[:200]}"
+
+    # The verdict is the CONJUNCTION of all four, as the module docstring promises.
+    #
+    # This previously read `rec["usable"] = bool(score >= 0.99)`, the needle score
+    # alone, which made the shipped verdict exactly the correctness-only test this
+    # sweep exists to avoid. On the 2026-08-26 data that marked 131,072 usable and
+    # would have printed it as the MEASURED USABLE CEILING, despite generation
+    # collapsing to 21.9 tok/s and one document taking 24 minutes to prefill. The
+    # recorded columns were right all along; only the verdict derived from them
+    # was wrong, so nothing published from those columns changes. Caught by a
+    # fidelity check 2026-08-26.
+    rec["usable"] = bool(rec.get("loads") and rec.get("resident")
+                         and rec.get("fast") and rec.get("needles_ok"))
     return rec
 
 
