@@ -1,0 +1,5 @@
+Write a Python function `min_points(intervals)`.
+
+`intervals` is a list of `(start, end)` tuples denoting CLOSED intervals with
+start <= end. Return the minimum number of points on the real line such that
+every interval contains at least one of those points. Return 0 for an empty list.

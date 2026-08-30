@@ -1,0 +1,10 @@
+This is a difference-in-differences problem. The treatment group (position change) shows a combination of the effect of the position change plus whatever change would have happened anyway (learning effects, settling into the bike, warm-up, equipment/tunnel drift, etc.) between run one and run two. The control group (same position throughout) isolates that "would have happened anyway" component, since they experienced the same run-to-run conditions without changing position.
+
+Treatment group change: -0.008 m^2
+Control group change: -0.005 m^2
+
+Best estimate of the effect attributable to the position change itself = treatment change - control change
+= -0.008 - (-0.005)
+= -0.003 m^2
+
+ANSWER: -0.003 m^2

@@ -1,0 +1,6 @@
+Write a Python function `circular_mean(angles)`.
+
+`angles` is a list of angles in radians. Return their circular (directional) mean:
+the angle of the resultant vector formed by averaging the unit vectors, that is
+atan2(mean of the sines, mean of the cosines). The result must lie in the range
+(-pi, pi]. Use only the Python standard library. Return 0.0 for an empty list.

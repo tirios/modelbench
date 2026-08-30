@@ -1,0 +1,47 @@
+```python
+import math
+
+def rolling_mean(times, values, width, min_count=1):
+    """Trailing rolling mean over a time window."""
+    n = len(times)
+
+    # Validation in order
+    if n != len(values):
+        raise ValueError("times and values must have the same length")
+
+    # Check that width is a finite number strictly > 0
+    try:
+        is_valid_width = math.isfinite(width) and width > 0
+    except TypeError:
+        is_valid_width = False
+    if not is_valid_width:
+        raise ValueError("width must be positive")
+
+    if min_count < 1:
+        raise ValueError("min_count must be >= 1")
+
+    # Check that times is strictly increasing
+    for i in range(1, n):
+        if times[i] <= times[i-1]:
+            raise ValueError("times must be strictly increasing")
+
+    # Empty input
+    if n == 0:
+        return []
+
+    out = []
+    lo = 0
+    total = 0.0
+    for i in range(n):
+        total += values[i]
+        # Remove samples outside the window: times[j] <= times[i] - width
+        while times[lo] <= times[i] - width:
+            total -= values[lo]
+            lo += 1
+        count = i - lo + 1
+        if count < min_count:
+            out.append(None)
+        else:
+            out.append(total / count)
+    return out
+```

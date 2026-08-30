@@ -1,0 +1,3 @@
+A1: 47.317
+A2: 0.9142
+A3: The operator's name is not stated in the document.

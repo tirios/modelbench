@@ -1,0 +1,288 @@
+```python
+import re
+
+
+def parse_records(text):
+    if not isinstance(text, str):
+        raise TypeError
+
+    records = []
+    errors = []
+    id_positions = {}
+
+    lines = text.split('\n')
+
+    for line_num, line in enumerate(lines, 1):
+        if line.endswith('\r'):
+            line = line[:-1]
+
+        if line.strip(' \t') == '':
+            continue
+
+        stripped = line.lstrip(' \t')
+        if stripped[0] == '#':
+            continue
+
+        fields = _scan_fields(line)
+        if fields is None:
+            errors.append((line_num, 'BAD_QUOTE'))
+            continue
+
+        if len(fields) not in (3, 4):
+            errors.append((line_num, 'FIELD_COUNT'))
+            continue
+
+        id_val = fields[0]
+        if id_val.strip(' \t') == '':
+            errors.append((line_num, 'BAD_ID'))
+            continue
+
+        date_val = _parse_date(fields[1])
+        if date_val is None:
+            errors.append((line_num, 'BAD_DATE'))
+            continue
+
+        amount_val = _parse_amount(fields[2])
+        if amount_val is None:
+            errors.append((line_num, 'BAD_AMOUNT'))
+            continue
+
+        note_val = fields[3] if len(fields) == 4 else ''
+
+        record = {'id': id_val, 'date': date_val, 'amount': amount_val, 'note': note_val}
+
+        if id_val in id_positions:
+            records[id_positions[id_val]] = record
+        else:
+            id_positions[id_val] = len(records)
+            records.append(record)
+
+    return records, errors
+
+
+def _scan_fields(line):
+    fields = []
+    i = 0
+    n = len(line)
+
+    while True:
+        while i < n and line[i] in ' \t':
+            i += 1
+
+        if i < n and line[i] == '"':
+            i += 1
+            value = []
+            while True:
+                if i >= n:
+                    return None
+                if line[i] == '"':
+                    if i + 1 < n and line[i + 1] == '"':
+                        value.append('"')
+                        i += 2
+                    else:
+                        i += 1
+                        break
+                else:
+                    value.append(line[i])
+                    i += 1
+            while i < n and line[i] in ' \t':
+                i += 1
+            if i < n and line[i] != ',':
+                return None
+            fields.append(''.join(value))
+        else:
+            start = i
+            while i < n and line[i] != ',':
+                i += 1
+            fields.append(line[start:i].strip(' \t'))
+
+        if i >= n:
+            break
+        i += 1
+        if i >= n:
+            fields.append('')
+            break
+
+    return fields
+
+
+def _is_valid_date(y, m, d):
+    if y < 1000 or y > 9999:
+        return False
+    if m < 1 or m > 12:
+        return False
+    if d < 1:
+        return False
+    days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    max_d = days_in_month[m]
+    if m == 2 and (y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)):
+        max_d = 29
+    return d <= max_d
+
+
+def _parse_date(field_value):
+    s = field_value.strip(' \t')
+    if not s:
+        return None
+
+    m = re.fullmatch(r'([0-9]{4})-([0-9]{2})-([0-9]{2})', s)
+    if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if _is_valid_date(y, mo, d):
+            return f'{y:04d}-{mo:02d}-{d:02d}'
+        return None
+
+    m = re.fullmatch(r'([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})', s)
+    if m:
+        a, b, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if _is_valid_date(y, b, a):
+            return f'{y:04d}-{b:02d}-{a:02d}'
+        if _is_valid_date(y, a, b):
+            return f'{y:04d}-{a:02d}-{b:02d}'
+        return None
+
+    m = re.fullmatch(r'([0-9]{1,2}) +([A-Za-z]{3}) +([0-9]{4})', s)
+    if m:
+        d = int(m.group(1))
+        mon_str = m.group(2).lower()
+        y = int(m.group(3))
+        months = {
+            'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+            'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
+        }
+        mo = months.get(mon_str)
+        if mo is None:
+            return None
+        if _is_valid_date(y, mo, d):
+            return f'{y:04d}-{mo:02d}-{d:02d}'
+        return None
+
+    return None
+
+
+def _is_grouping_comma(s):
+    parts = s.split(',')
+    if len(parts) < 2:
+        return False
+    for part in parts[1:]:
+        if len(part) != 3:
+            return False
+        for c in part:
+            if c not in '0123456789':
+                return False
+    return True
+
+
+def _parse_amount(field_value):
+    s = field_value.strip(' \t')
+
+    if not s:
+        return None
+
+    is_paren = False
+    if len(s) >= 2 and s[0] == '(' and s[-1] == ')':
+        is_paren = True
+        s = s[1:-1].strip(' \t')
+        if not s:
+            return None
+    elif s[0] == '(' or s[-1] == ')':
+        return None
+
+    sign = 1
+    if s and s[0] in '+-':
+        if is_paren:
+            return None
+        if s[0] == '-':
+            sign = -1
+        s = s[1:]
+
+    if s and s[0] == '$':
+        s = s[1:]
+
+    is_percent = False
+    if s and s[-1] == '%':
+        is_percent = True
+        s = s[:-1]
+
+    if not s:
+        return None
+
+    for c in s:
+        if c not in '0123456789.,':
+            return None
+
+    has_comma = ',' in s
+    has_dot = '.' in s
+
+    dec_sep = None
+    grp_sep = None
+
+    if has_comma and has_dot:
+        if s.rfind('.') > s.rfind(','):
+            dec_sep = '.'
+            grp_sep = ','
+        else:
+            dec_sep = ','
+            grp_sep = '.'
+    elif has_comma:
+        if _is_grouping_comma(s):
+            grp_sep = ','
+        else:
+            dec_sep = ','
+    elif has_dot:
+        if s.count('.') >= 2:
+            grp_sep = '.'
+        else:
+            dec_sep = '.'
+
+    if dec_sep:
+        parts = s.split(dec_sep)
+        if len(parts) != 2:
+            return None
+        int_part, frac_part = parts
+        if not frac_part:
+            return None
+        for c in frac_part:
+            if c not in '0123456789':
+                return None
+    else:
+        int_part = s
+        frac_part = None
+
+    if grp_sep:
+        groups = int_part.split(grp_sep)
+        if len(groups) < 2:
+            return None
+        if not groups[0] or len(groups[0]) > 3:
+            return None
+        for c in groups[0]:
+            if c not in '0123456789':
+                return None
+        for g in groups[1:]:
+            if len(g) != 3:
+                return None
+            for c in g:
+                if c not in '0123456789':
+                    return None
+        int_digits = ''.join(groups)
+    else:
+        if not int_part:
+            return None
+        for c in int_part:
+            if c not in '0123456789':
+                return None
+        int_digits = int_part
+
+    if frac_part:
+        value = float(int_digits + '.' + frac_part)
+    else:
+        value = float(int_digits)
+
+    if is_percent:
+        value = value / 100.0
+
+    if is_paren or sign == -1:
+        value = -value
+
+    return value
+```

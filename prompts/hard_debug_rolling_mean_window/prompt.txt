@@ -1,0 +1,71 @@
+The function below is meant to compute a trailing rolling mean over an irregularly sampled time series. It looks reasonable and it is subtly wrong. Debug it.
+
+Return a corrected implementation with the same name and the same signature, `rolling_mean(times, values, width, min_count=1)`. Pure Python; the standard library and numpy are available.
+
+```python
+def rolling_mean(times, values, width, min_count=1):
+    """Trailing rolling mean over a time window."""
+    n = len(times)
+    if n != len(values):
+        raise ValueError("times and values must have the same length")
+    if not (width > 0):
+        raise ValueError("width must be positive")
+    if min_count < 1:
+        raise ValueError("min_count must be >= 1")
+    out = []
+    lo = 0
+    total = 0.0
+    for i in range(n):
+        total += values[i]
+        while times[lo] < times[i] - width:
+            total -= values[lo]
+            lo += 1
+        count = i - lo + 1
+        if count < min_count:
+            out.append(None)
+        else:
+            out.append(total / count)
+    return out
+```
+
+The specification below is authoritative. Where the code above disagrees with it, the code is wrong.
+
+SPEC
+
+`times` is a sequence of floats, `values` is a sequence of floats of the same length, `width` is a float, `min_count` is an int.
+
+Window definition. For each index `i`, the window is the set of indices `j` such that
+
+    times[i] - width < times[j] <= times[i]
+
+That is, the window is half-open: open at the old end, closed at the current point. A sample whose timestamp is exactly `width` older than `times[i]` is OUTSIDE the window. The current point `i` is always inside its own window, so the window count is never zero (if floating-point rounding makes `times[i] - width == times[i]`, point `i` is still counted).
+
+Return value. A new plain Python list of the same length as `times`. Element `i` is:
+- `None` if the window at `i` holds fewer than `min_count` samples;
+- otherwise the arithmetic mean of `values[j]` over the window, as a float.
+
+The function must not modify `times` or `values`.
+
+Validation, applied in this order, before any output is produced:
+1. `len(times) != len(values)` raises `ValueError`.
+2. `width` not a finite number strictly greater than 0 raises `ValueError`. This includes 0, negatives, NaN, and positive infinity.
+3. `min_count < 1` raises `ValueError`.
+4. `times` not strictly increasing raises `ValueError`. Equal consecutive timestamps are rejected, not tolerated.
+
+Empty input. If `times` and `values` are both empty and the arguments are valid, return `[]`. Validation still runs first, so `rolling_mean([], [], 0.0)` raises `ValueError` and `rolling_mean([], [1.0], 1.0)` raises `ValueError`.
+
+Numerical accuracy. Let `m = math.fsum(window_values) / count` for a given window. Your returned value for that window must satisfy `abs(result - m) <= 1e-9 * max(1.0, abs(m))`. Note that a plain running sum, which adds each arriving value and subtracts each departing value, can lose every significant digit when the values inside a window differ by many orders of magnitude. A numpy `cumsum` differenced at the window ends has exactly the same weakness. The tolerance above applies in that case too.
+
+Efficiency. The work per point must not grow with the number of samples inside the window: the whole call must be amortised O(n), not O(n * window size). It is called with n = 120,000 points and windows holding about 20,000 points, and must return in well under 6 seconds. An implementation that re-sums each window from scratch is roughly two orders of magnitude slower than a two-pointer running sum and will blow the budget.
+
+Worked examples:
+
+    rolling_mean([0.0, 1.0, 2.0, 3.0, 4.0], [0.0, 1.0, 2.0, 3.0, 4.0], 3.0)
+    -> [0.0, 0.5, 1.0, 2.0, 3.0]
+    # at i=3 the window is (0.0, 3.0], which holds indices 1,2,3 -> mean 2.0.
+    # index 0 sits exactly on the open end and is excluded.
+
+    rolling_mean([0.0, 2.0], [10.0, 20.0], 2.0)   -> [10.0, 20.0]
+    rolling_mean([0.0, 2.0], [10.0, 20.0], 2.001) -> [10.0, 15.0]
+    rolling_mean([0.0, 1.0, 2.0, 3.0, 4.0, 5.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2.0, 3)
+    -> [None, None, None, None, None, None]

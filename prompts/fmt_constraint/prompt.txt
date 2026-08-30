@@ -1,0 +1,9 @@
+Explain, in exactly three numbered sentences, why averaging a measurement
+over a longer window reduces the influence of random noise but does nothing about
+a systematic offset.
+
+Constraints, checked mechanically:
+  - Exactly three sentences, each on its own line, numbered 1. 2. 3.
+  - Never use the words "signal", "bias" or "average" (in any form or casing).
+  - Total length under 90 words.
+  - No em dashes.

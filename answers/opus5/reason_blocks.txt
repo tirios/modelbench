@@ -1,0 +1,11 @@
+Total samples: 250 Hz x 90 s = 22,500.
+
+Transients discarded: 12 s x 250 = 3,000 at the start, 8 s x 250 = 2,000 at the end, so 5,000 removed.
+Remaining: 22,500 - 5,000 = 17,500.
+
+Flagged and removed: 3.2% of 17,500 = 560.
+Surviving: 17,500 - 560 = 16,940.
+
+Blocks of 125: 16,940 / 125 = 135.52, so 135 complete blocks (with 65 samples left over).
+
+ANSWER: 135

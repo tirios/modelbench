@@ -1,0 +1,65 @@
+Implement a fixed-capacity sliding window with running order statistics.
+
+Write a single module-level class named `SlidingWindow` in pure Python. The standard library and `numpy` are available; no other third-party packages. Do not print anything, do not read stdin, do not define `main()`. The grader `exec`s your code and then calls `SlidingWindow` directly.
+
+The window holds at most `capacity` finite real values in first-in-first-out order. Duplicate values are allowed and are counted with multiplicity.
+
+### Constructor
+
+`SlidingWindow(capacity)`
+
+- Raise `ValueError` if `capacity` is not an instance of `int`, or if `capacity < 1`. So `SlidingWindow(0)`, `SlidingWindow(-1)`, `SlidingWindow(5.0)`, `SlidingWindow(2.5)`, `SlidingWindow('5')`, `SlidingWindow(None)` and `SlidingWindow([3])` all raise `ValueError`.
+- A newly constructed window is empty.
+
+### Capacity and length
+
+- `w.capacity` -> `int`. The current capacity. May be a plain attribute or a property.
+- `len(w)` -> `int`. Number of values currently held. Always `0 <= len(w) <= w.capacity`.
+
+### `push(x)` -> `float` or `None`
+
+- Raise `ValueError`, leaving the window **completely unchanged**, if `x` is not an instance of `int` or `float`, or if `x` is NaN or positive/negative infinity. (numpy scalar types need not be supported.)
+- Otherwise append `float(x)` as the newest value.
+- If the window was already full, the oldest value is evicted first and `push` returns that evicted value as a `float`. Otherwise `push` returns `None`.
+
+### `snapshot()` -> `list` of `float`
+
+- The current contents in insertion order, oldest first and newest last, every element a `float`.
+- A **fresh list on every call**: mutating the returned list must not affect the window.
+- Empty window -> `[]`.
+
+### Statistics
+
+Each returns a Python `float`, or `None` as stated. Each describes only the values currently in the window.
+
+- `mean()` — arithmetic mean. `None` if the window is empty.
+- `variance()` — the **sample** variance, i.e. the sum of squared deviations divided by `n - 1`. `None` if `len(w) < 2`.
+- `median()` — for odd `n`, the middle value of the sorted contents; for even `n`, the arithmetic mean of the two middle values. `None` if the window is empty.
+- `min()` — the smallest current value. `None` if the window is empty.
+- `max()` — the largest current value. `None` if the window is empty.
+
+**Accuracy requirement.** For every reachable window state, `mean()` and `variance()` must be within a *relative* error of `1e-9` of the exact rational value computed from the current contents. This must hold when the values are large and nearly equal, for example around `1e9` with spreads of order `1`, and it must still hold after many evictions have taken place. Formulations that accumulate a running sum of squares, or that undo a previous update by subtraction, lose most or all significance under those conditions. Choose your algorithm accordingly.
+
+### `resize(new_capacity)` -> `list` of `float`
+
+- Same validation as the constructor: raise `ValueError` if `new_capacity` is not an instance of `int` or is `< 1`, and in that case leave the window entirely unchanged (both contents and capacity).
+- If `new_capacity` is smaller than the current length, evict the **oldest** values until the length equals `new_capacity`, and return those evicted values as a list in eviction order, oldest first. Surviving values keep their relative order, and every statistic must afterwards reflect the reduced contents.
+- Otherwise return `[]`. Resizing to the current capacity is legal and returns `[]`.
+- On any successful call, set the capacity to `new_capacity`.
+
+### `clear()` -> `None`
+
+- Discard all values and return `None`. The capacity is unchanged. After `clear()` the window must behave exactly like a freshly constructed window of that capacity: all statistics are `None`, and any statistic computed after subsequent pushes must depend only on values pushed after the clear.
+
+### Performance requirement
+
+`push()` and `median()` must be cheap enough to be called in a tight loop on a large window. The hidden tests run this benchmark and require it to complete in under **12 seconds**:
+
+```
+w = SlidingWindow(10000)
+for v in vals:          # 40000 finite floats
+    w.push(v)
+    w.median()
+```
+
+Re-sorting the whole window on every `median()` call is far too slow to meet that budget. `mean()`, `variance()`, `min()`, `max()`, `snapshot()` and `resize()` are not part of the benchmark and carry no complexity requirement.

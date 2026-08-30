@@ -1,0 +1,121 @@
+```python
+import math
+import re
+from fractions import Fraction
+
+
+class SpecError(Exception):
+    def __init__(self, *args, index=None):
+        super().__init__(*args)
+        self.index = index
+
+
+class SpecTypeError(SpecError, TypeError):
+    def __init__(self, *args, argname=None, index=None):
+        super().__init__(*args, index=index)
+        self.argname = argname
+
+
+class SpecSyntaxError(SpecError, ValueError):
+    pass
+
+
+class SpecValueError(SpecError, ValueError):
+    pass
+
+
+class DuplicateNameError(SpecValueError):
+    def __init__(self, *args, name=None, index=None):
+        super().__init__(*args, index=index)
+        self.name = name
+
+
+class CapacityError(SpecError, ValueError):
+    pass
+
+
+_NAME_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+
+
+def allocate(spec, capacity):
+    # 1. spec type
+    if not isinstance(spec, str):
+        raise SpecTypeError("spec must be a str", argname='spec', index=None)
+
+    # 2. capacity type (bool rejected even though it is an int subclass)
+    if isinstance(capacity, bool) or not isinstance(capacity, int):
+        raise SpecTypeError("capacity must be an int", argname='capacity', index=None)
+
+    # 3. capacity sign, before any parsing
+    if capacity < 0:
+        raise CapacityError("capacity must be non-negative", index=None)
+
+    # empty-spec shortcut
+    if spec.strip() == '':
+        return {}
+
+    entries = spec.split(',')
+    names = []
+    weights = []  # Fraction, exact
+    seen = set()
+
+    for i, entry in enumerate(entries):
+        # a. exactly one '='
+        if entry.count('=') != 1:
+            raise SpecSyntaxError("entry must contain exactly one '='", index=i)
+
+        name_part, weight_part = entry.split('=')
+        name = name_part.strip()
+        weight_str = weight_part.strip()
+
+        # b. name must match [A-Za-z_][A-Za-z0-9_]* in full, ASCII only
+        if not _NAME_RE.fullmatch(name):
+            raise SpecSyntaxError("invalid name", index=i)
+
+        # c. weight must be parseable by float()
+        try:
+            w = float(weight_str)
+        except ValueError:
+            raise SpecSyntaxError("invalid weight", index=i)
+
+        # d. weight must be finite
+        if math.isnan(w) or math.isinf(w):
+            raise SpecValueError("weight must be finite", index=i)
+
+        # e. weight must not be negative (-0.0 is not negative)
+        if w < 0:
+            raise SpecValueError("weight must be non-negative", index=i)
+
+        # f. name must not duplicate an earlier accepted entry
+        if name in seen:
+            raise DuplicateNameError("duplicate name", name=name, index=i)
+
+        seen.add(name)
+        names.append(name)
+        weights.append(Fraction(*w.as_integer_ratio()))
+
+    k = len(names)
+    S = sum(weights) if weights else Fraction(0)
+
+    if S == 0:
+        return {name: 0 for name in names}
+
+    bases = [0] * k
+    remainders = [Fraction(0)] * k
+    for i in range(k):
+        q = Fraction(capacity) * weights[i] / S
+        base = math.floor(q)
+        bases[i] = base
+        remainders[i] = q - base
+
+    r = capacity - sum(bases)
+
+    order = sorted(range(k), key=lambda idx: (-remainders[idx], idx))
+    extra = set(order[:r])
+
+    result = {}
+    for i, name in enumerate(names):
+        units = bases[i] + (1 if i in extra else 0)
+        result[name] = int(units)
+    return result
+```

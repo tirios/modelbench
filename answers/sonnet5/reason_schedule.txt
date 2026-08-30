@@ -1,0 +1,10 @@
+Constraint 2 (C immediately after B) allows (B,C) = (1,2), (2,3), (3,4).
+Constraint 4 (C not in slot 2) eliminates (1,2), leaving (2,3) or (3,4).
+
+Case (B,C)=(2,3): remaining slots 1,4 go to A,D. Constraint 1 (A not slot 1) forces A=4, D=1. Then constraint 5 (A earlier than C) requires 4<3, false. Invalid.
+
+Case (B,C)=(3,4): remaining slots 1,2 go to A,D. Constraint 1 forces A=2, D=1. Constraint 3 (D in slot 1 or 4) satisfied (D=1). Constraint 5 requires 2<4, true. Valid.
+
+Order: slot1=D, slot2=A, slot3=B, slot4=C.
+
+ANSWER: DABC

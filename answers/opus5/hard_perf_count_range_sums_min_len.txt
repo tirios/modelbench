@@ -1,0 +1,135 @@
+```python
+from bisect import bisect_right as _bisect_right
+from itertools import accumulate as _accumulate
+
+try:
+    import numpy as _np
+except Exception:  # numpy is optional; a pure-python O(n log n) path is kept below
+    _np = None
+
+
+def count_range_sums(nums, lo, hi, min_len=1):
+    """Count pairs (i, j), i <= j, with (j - i + 1) >= min_len and lo <= sum(nums[i:j+1]) <= hi."""
+    # 1. Argument validation (this must happen before anything else).
+    if min_len < 1:
+        raise ValueError("min_len must be >= 1")
+    if lo > hi:
+        return 0
+    n = len(nums)
+    if n == 0 or min_len > n:
+        return 0
+
+    m = int(min_len)
+    lo = int(lo)
+    hi = int(hi)
+
+    # 2. Exact prefix sums with python ints: P[k] = sum(nums[:k]).
+    #    sum(nums[i:j+1]) == P[j + 1] - P[i].  nums is only read, never mutated.
+    P = [0]
+    P.extend(_accumulate(nums))
+
+    # 3. Reduction.  Put r = j + 1 and t = r - m, so t runs over [0, n - m] and the
+    #    admissible left ends for that right end are exactly i in [0, t].  Since all
+    #    quantities are integers,
+    #        lo <= P[t + m] - P[i] <= hi
+    #    <=> P[i] <= P[t + m] - lo   AND   NOT (P[i] <= P[t + m] - hi - 1).
+    #    Hence the answer is
+    #        sum_t ( #{i <= t : A[i] <= U[t]} - #{i <= t : A[i] <= W[t]} )
+    #    with A[i] = P[i], U[t] = P[t + m] - lo, W[t] = P[t + m] - hi - 1.
+    #    Each side is a 2-D dominance count (index order + value order), which is what
+    #    makes the min_len constraint free: a left end simply enters the structure at
+    #    the step where it becomes eligible.
+    N = n - m + 1  # number of right ends, t = 0 .. N-1
+
+    # 4. Rank compression.  Only the order of A against U and W matters, so replace
+    #    every value by a small integer rank in [-1, K-1].  All later arithmetic is on
+    #    those ranks, so magnitudes of nums/lo/hi can never overflow int64.
+    use_np = _np is not None
+    fast = False
+    if use_np:
+        span = max(abs(max(P)), abs(min(P))) + max(abs(lo), abs(hi)) + 2
+        fast = span < (1 << 62)
+
+    if fast:
+        Pa = _np.array(P, dtype=_np.int64)
+        A = Pa[:N]
+        SA = _np.unique(A)  # sorted distinct left-end values
+        K = int(SA.size)
+        ra = _np.searchsorted(SA, A).astype(_np.int64)
+        R = Pa[m:]  # P[m], ..., P[n]  (length N)
+        ru = _np.searchsorted(SA, R - lo, side="right").astype(_np.int64) - 1
+        rw = _np.searchsorted(SA, R - hi - 1, side="right").astype(_np.int64) - 1
+    else:
+        A = P[:N]
+        SA = sorted(set(A))
+        K = len(SA)
+        where = {v: i for i, v in enumerate(SA)}
+        ra_l = [where[v] for v in A]
+        ru_l = [_bisect_right(SA, P[t + m] - lo) - 1 for t in range(N)]
+        rw_l = [_bisect_right(SA, P[t + m] - hi - 1) - 1 for t in range(N)]
+        if use_np:
+            ra = _np.array(ra_l, dtype=_np.int64)
+            ru = _np.array(ru_l, dtype=_np.int64)
+            rw = _np.array(rw_l, dtype=_np.int64)
+        else:
+            # Fenwick / BIT fallback: O(n log n), exact python-int accumulator.
+            tree = [0] * (K + 1)
+            total = 0
+            for t in range(N):
+                i = ra_l[t] + 1  # insert left end t, then query -> covers i <= t
+                while i <= K:
+                    tree[i] += 1
+                    i += i & -i
+                c = 0
+                i = ru_l[t] + 1
+                while i > 0:
+                    c += tree[i]
+                    i -= i & -i
+                i = rw_l[t] + 1
+                while i > 0:
+                    c -= tree[i]
+                    i -= i & -i
+                total += c
+            return int(total)
+
+    # 5. Vectorised divide and conquer over the ranks (O(n log n) searchsorted work).
+    #    Every pair i < t is separated at exactly one level: i sits in an even block of
+    #    size b and t in its odd sibling.  Pairs with i == t are the base level.
+    npw = 1
+    while npw < N:
+        npw <<= 1
+    big = K          # sentinel left rank: larger than every real rank
+    stride = K + 2   # key stride; > big + 1 keeps blocks disjoint and ordered
+
+    rap = _np.full(npw, big, dtype=_np.int64)
+    rap[:N] = ra
+    rup = _np.full(npw, -1, dtype=_np.int64)
+    rup[:N] = ru
+    rwp = _np.full(npw, -1, dtype=_np.int64)
+    rwp[:N] = rw
+    # Padding is inert: a padded left rank (big) never satisfies a real query, and a
+    # padded query (-1) contributes the same block offset to both sides, which cancels.
+
+    total = int(_np.count_nonzero(rap <= rup)) - int(_np.count_nonzero(rap <= rwp))
+
+    cur = rap.copy()  # kept sorted within each block of the current size
+    b = 1
+    while b < npw:
+        rows = npw // b
+        pairs = rows // 2
+        off = (_np.arange(pairs, dtype=_np.int64) * stride).reshape(pairs, 1)
+        # Composite keys (block id, rank) make one global searchsorted answer every
+        # sibling pair at once; the per-pair offset is identical for U and W, so the
+        # difference of the two counts needs no offset correction.
+        keys = (cur.reshape(rows, b)[0::2] + off).ravel()
+        qu = (rup.reshape(rows, b)[1::2] + off).ravel()
+        qw = (rwp.reshape(rows, b)[1::2] + off).ravel()
+        cu = _np.searchsorted(keys, qu, side="right")
+        cw = _np.searchsorted(keys, qw, side="right")
+        total += int((cu - cw).sum(dtype=_np.int64))
+        b <<= 1
+        if b < npw:
+            cur = _np.sort(cur.reshape(npw // b, b), axis=1).ravel()
+
+    return int(total)
+```

@@ -1,0 +1,3 @@
+1. Random noise consists of unpredictable fluctuations that vary from observation to observation, so combining many readings causes these deviations to partially cancel out.
+2. A constant offset, however, affects every single observation identically, so combining more readings simply accumulates this error proportionally without reducing it.
+3. Longer windows therefore suppress random variability through cancellation while leaving systematic errors unchanged.

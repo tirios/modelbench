@@ -1,0 +1,48 @@
+```python
+def _adjust_raw(state, index, record):
+    v = float(record['value'])
+    if v < 0:
+        v = 0.0
+    state['total'] = state['total'] + v
+    return {'i': index, 'kind': 'raw', 'value': round(v, 3), 'total': round(state['total'], 3)}
+
+
+def _adjust_scaled(state, index, record):
+    v = float(record['value']) * float(record.get('gain', 1.0))
+    v = round(v, 2)
+    state['total'] = state['total'] + v
+    return {'i': index, 'kind': 'scaled', 'value': v, 'total': round(state['total'], 3)}
+
+
+def _adjust_offset(state, index, record):
+    v = float(record['value']) + float(record.get('bias', 0.0))
+    if v < 0:
+        v = 0.0
+    record['value'] = v
+    state['total'] = state['total'] + v
+    return {'i': index, 'kind': 'offset', 'value': round(v, 3), 'total': round(state['total'], 3)}
+
+
+def _adjust_skip(state, index, record):
+    return {'i': index, 'kind': 'skip', 'value': 0.0, 'total': round(state['total'], 3)}
+
+
+ADJUSTERS = {
+    'raw': _adjust_raw,
+    'scaled': _adjust_scaled,
+    'offset': _adjust_offset,
+    'skip': _adjust_skip,
+}
+
+
+def adjust(readings):
+    state = {'total': 0.0}
+    out = []
+    for index, record in enumerate(readings):
+        kind = record.get('kind')
+        if kind not in ADJUSTERS:
+            raise ValueError('unknown kind: %r' % (kind,))
+        handler = ADJUSTERS[kind]
+        out.append(handler(state, index, record))
+    return out
+```

@@ -1,0 +1,105 @@
+```python
+import numpy as np
+
+
+def log_sum_exp(xs):
+    arr = np.asarray(xs, dtype=float)
+
+    if arr.size == 0:
+        return float('-inf')
+
+    if np.isnan(arr).any():
+        raise ValueError("xs contains NaN")
+    if np.isposinf(arr).any():
+        raise ValueError("xs contains +inf")
+
+    finite_mask = ~np.isneginf(arr)
+    if not finite_mask.any():
+        return float('-inf')
+
+    finite = arr[finite_mask]
+    m = finite.max()
+    s = np.exp(finite - m).sum()
+
+    return float(m + np.log(s))
+
+
+def weighted_quantile(values, log_weights, qs):
+    if len(values) != len(log_weights):
+        raise ValueError("values and log_weights must have the same length")
+
+    values_arr = np.asarray(values, dtype=float)
+    log_weights_arr = np.asarray(log_weights, dtype=float)
+    qs_arr = np.asarray(qs, dtype=float)
+
+    n = values_arr.shape[0]
+
+    if (~np.isfinite(values_arr)).any():
+        raise ValueError("values must be finite")
+
+    if np.isnan(log_weights_arr).any() or np.isposinf(log_weights_arr).any():
+        raise ValueError("log_weights contains NaN or +inf")
+
+    if np.isnan(qs_arr).any() or (qs_arr < 0.0).any() or (qs_arr > 1.0).any():
+        raise ValueError("qs entries must lie in [0, 1]")
+
+    if n == 0 or np.all(np.isneginf(log_weights_arr)):
+        raise ValueError("every log weight is -inf, or there are no entries")
+
+    if qs_arr.shape[0] == 0:
+        return []
+
+    # A1: drop zero-weight (log-weight == -inf) entries
+    keep = ~np.isneginf(log_weights_arr)
+    kept_vals = values_arr[keep]
+    kept_lw = log_weights_arr[keep]
+
+    # A2: shift by the max log-weight and drop entries that underflow to 0
+    L = kept_lw.max()
+    t = np.exp(kept_lw - L)
+    surv = t != 0.0
+    s_vals = kept_vals[surv]
+    s_t = t[surv]
+
+    # A3: normalise surviving weights
+    Z = s_t.sum()
+    w = s_t / Z
+
+    # A4: merge equal values (sort, then sum weights within each run)
+    order = np.argsort(s_vals, kind='mergesort')
+    sorted_vals = s_vals[order]
+    sorted_w = w[order]
+
+    change = np.nonzero(np.diff(sorted_vals) != 0)[0] + 1
+    starts = np.concatenate(([0], change))
+    u = sorted_vals[starts]
+    v = np.add.reduceat(sorted_w, starts)
+
+    m = u.shape[0]
+
+    if m == 1:
+        val = float(u[0])
+        return [val] * qs_arr.shape[0]
+
+    # A6: build the h grid
+    C = np.cumsum(v)
+    p = C - v / 2.0
+    denom = p[-1] - p[0]
+    h = (p - p[0]) / denom
+
+    # A7: locate each q's bracket via binary search and interpolate
+    idx0 = np.searchsorted(h, qs_arr, side='right') - 1
+    idx0 = np.clip(idx0, 0, m - 2)
+
+    h_k = h[idx0]
+    h_k1 = h[idx0 + 1]
+    u_k = u[idx0]
+    u_k1 = u[idx0 + 1]
+
+    frac = (qs_arr - h_k) / (h_k1 - h_k)
+    result = u_k + frac * (u_k1 - u_k)
+    result = np.where(qs_arr <= 0.0, u[0], result)
+    result = np.where(qs_arr >= 1.0, u[-1], result)
+
+    return [float(x) for x in result]
+```

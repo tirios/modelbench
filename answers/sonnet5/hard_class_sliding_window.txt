@@ -1,0 +1,93 @@
+```python
+import bisect
+import math
+from collections import deque
+
+
+class SlidingWindow:
+    """Fixed-capacity FIFO sliding window with running order statistics."""
+
+    def __init__(self, capacity):
+        if not isinstance(capacity, int) or capacity < 1:
+            raise ValueError("capacity must be an int >= 1")
+        self.capacity = capacity
+        self._dq = deque()
+        self._sorted = []
+
+    def __len__(self):
+        return len(self._dq)
+
+    def push(self, x):
+        if not isinstance(x, (int, float)):
+            raise ValueError("x must be an int or float")
+        xf = float(x)
+        if math.isnan(xf) or math.isinf(xf):
+            raise ValueError("x must be finite")
+
+        evicted = None
+        if len(self._dq) >= self.capacity:
+            evicted = self._dq.popleft()
+            idx = bisect.bisect_left(self._sorted, evicted)
+            del self._sorted[idx]
+
+        self._dq.append(xf)
+        bisect.insort(self._sorted, xf)
+        return evicted
+
+    def snapshot(self):
+        return list(self._dq)
+
+    def mean(self):
+        n = len(self._dq)
+        if n == 0:
+            return None
+        return math.fsum(self._dq) / n
+
+    def variance(self):
+        n = len(self._dq)
+        if n < 2:
+            return None
+        m = math.fsum(self._dq) / n
+        ss = math.fsum((v - m) ** 2 for v in self._dq)
+        return ss / (n - 1)
+
+    def median(self):
+        n = len(self._sorted)
+        if n == 0:
+            return None
+        mid = n // 2
+        if n % 2 == 1:
+            return float(self._sorted[mid])
+        return (self._sorted[mid - 1] + self._sorted[mid]) / 2.0
+
+    def min(self):
+        if not self._sorted:
+            return None
+        return self._sorted[0]
+
+    def max(self):
+        if not self._sorted:
+            return None
+        return self._sorted[-1]
+
+    def resize(self, new_capacity):
+        if not isinstance(new_capacity, int) or new_capacity < 1:
+            raise ValueError("new_capacity must be an int >= 1")
+
+        evicted = []
+        if new_capacity < len(self._dq):
+            num_to_evict = len(self._dq) - new_capacity
+            for _ in range(num_to_evict):
+                v = self._dq.popleft()
+                idx = bisect.bisect_left(self._sorted, v)
+                del self._sorted[idx]
+                evicted.append(v)
+
+        self.capacity = new_capacity
+        return evicted
+
+    def clear(self):
+        self._dq.clear()
+        self._sorted.clear()
+        return None
+```

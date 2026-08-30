@@ -1,0 +1,84 @@
+```python
+import bisect
+
+def schedule(intervals):
+    # Validation
+    validated = []
+    for i, item in enumerate(intervals):
+        try:
+            seq = list(item)
+        except TypeError:
+            raise ValueError(f"Item {i} is not a sequence")
+
+        if len(seq) != 3:
+            raise ValueError(f"Item {i} does not have exactly 3 elements")
+
+        start, end, weight = seq
+
+        try:
+            start = float(start)
+            end = float(end)
+            weight = float(weight)
+        except (TypeError, ValueError):
+            raise ValueError(f"Item {i} contains non-numeric values")
+
+        if end <= start:
+            raise ValueError(f"Item {i} has end <= start")
+
+        if weight < 0:
+            raise ValueError(f"Item {i} has negative weight")
+
+        validated.append((start, end, weight, i))
+
+    if not validated:
+        return (0, [])
+
+    # Sort by end time for dynamic programming
+    sorted_intervals = sorted(validated, key=lambda x: x[1])
+
+    n = len(sorted_intervals)
+
+    # Build list of end times for binary search
+    end_times = [sorted_intervals[i][1] for i in range(n)]
+
+    # dp[i] = (total_weight, num_intervals, sum_of_indices, indices_list)
+    dp = [(0.0, 0, 0, [])]
+
+    for i in range(n):
+        start, end, weight, idx = sorted_intervals[i]
+
+        # Find the latest interval j such that end_times[j] <= start
+        pos = bisect.bisect_right(end_times, start, hi=i) - 1
+        j = pos
+
+        # Option 1: skip interval i
+        skip = dp[i]
+
+        # Option 2: include interval i (only if weight > 0)
+        if weight > 0:
+            prev_weight, prev_count, prev_sum, prev_indices = dp[j + 1]
+            include = (prev_weight + weight, prev_count + 1, prev_sum + idx, prev_indices + [idx])
+        else:
+            include = None
+
+        # Compare: maximize weight, minimize count, minimize sum of indices
+        if include is None:
+            best = skip
+        elif include[0] > skip[0] or \
+             (include[0] == skip[0] and include[1] < skip[1]) or \
+             (include[0] == skip[0] and include[1] == skip[1] and include[2] < skip[2]):
+            best = include
+        else:
+            best = skip
+
+        dp.append(best)
+
+    result = dp[n]
+    total_weight = result[0]
+
+    # Convert to int if it's a whole number
+    if isinstance(total_weight, float) and total_weight == int(total_weight):
+        total_weight = int(total_weight)
+
+    return (total_weight, sorted(result[3]))
+```

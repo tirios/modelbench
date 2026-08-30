@@ -1,0 +1,302 @@
+{
+ "model": "opus5",
+ "results": [
+  {
+   "task": "code_circular_mean",
+   "cat": "code",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "7/7 checks",
+   "text": "```python\nimport math\n\n\ndef circular_mean(angles):\n    \"\"\"Return the circular (directional) mean of `angles` (radians) in (-pi, pi].\"\"\"\n    n = len(angles)\n    if n == 0:\n        return 0.0\n\n    sin_sum = 0.0\n    cos_sum = 0.0\n    for a in angles:\n        sin_sum += math.sin(a)\n        cos_sum += math.cos(a)\n\n    mean_sin = sin_sum / n\n    mean_cos = cos_sum / n\n\n    result = math.atan2(mean_sin, mean_cos)\n\n    # atan2 returns [-pi, pi]; map the -pi endpoint onto +pi so the\n    # result lies in (-pi, pi]. This also normalises the -0.0 case.\n    if result == -math.pi:\n        return math.pi\n    if result == 0.0:\n        return 0.0\n\n    return result\n```\n",
+   "chars": 661
+  },
+  {
+   "task": "code_harmonics",
+   "cat": "code",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "5/5 checks",
+   "text": "```python\nimport numpy as np\n\n\ndef fit_harmonics(theta, y, K):\n    \"\"\"Least-squares fit of a truncated Fourier series to (theta, y).\n\n    Model: y ~= a0 + sum_{k=1..K} [ a_k*cos(k*theta) + b_k*sin(k*theta) ]\n\n    Returns (a0, [a_1..a_K], [b_1..b_K]).\n    \"\"\"\n    theta = np.asarray(theta, dtype=float).ravel()\n    y = np.asarray(y, dtype=float).ravel()\n\n    if theta.shape[0] != y.shape[0]:\n        raise ValueError(\"theta and y must have the same number of samples\")\n\n    K = int(K)\n    if K < 0:\n        raise ValueError(\"K must be non-negative\")\n\n    n = theta.shape[0]\n\n    # Design matrix: [1, cos(theta), sin(theta), ..., cos(K*theta), sin(K*theta)]\n    X = np.empty((n, 1 + 2 * K), dtype=float)\n    X[:, 0] = 1.0\n    for k in range(1, K + 1):\n        kt = k * theta\n        X[:, 2 * k - 1] = np.cos(kt)\n        X[:, 2 * k] = np.sin(kt)\n\n    # lstsq handles rank-deficient designs (e.g. too few or aliased samples)\n    # via the minimum-norm solution instead of raising.\n    coef, _, _, _ = np.linalg.lstsq(X, y, rcond=None)\n\n    a0 = float(coef[0])\n    a_list = [float(coef[2 * k - 1]) for k in range(1, K + 1)]\n    b_list = [float(coef[2 * k]) for k in range(1, K + 1)]\n\n    return a0, a_list, b_list\n```\n",
+   "chars": 1213
+  },
+  {
+   "task": "code_stabbing",
+   "cat": "code",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "8/8 checks",
+   "text": "```python\ndef min_points(intervals):\n    if not intervals:\n        return 0\n    count = 0\n    last_point = None\n    for start, end in sorted(intervals, key=lambda iv: iv[1]):\n        if last_point is None or start > last_point:\n            count += 1\n            last_point = end\n    return count\n```\n",
+   "chars": 301
+  },
+  {
+   "task": "code_debug_welford",
+   "cat": "code",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "7/7 checks",
+   "text": "The bug is in the `M2` update: `delta * (x - mean)` uses the *old* mean for both factors, so it accumulates `sum((x - mean_old)**2)` instead of Welford's `sum(delta_old * delta_new)`. In Welford's algorithm the mean must be updated first, and `M2` accumulated as `delta * delta2` where `delta` uses the old mean and `delta2` uses the new mean. The original also raises `ZeroDivisionError` on an empty or single-element input.\n\n```python\ndef running_var(xs):\n    n = 0\n    mean = 0.0\n    M2 = 0.0\n    for x in xs:\n        n += 1\n        delta = x - mean\n        mean += delta / n\n        delta2 = x - mean\n        M2 += delta * delta2\n    if n < 2:\n        return 0.0\n    return M2 / (n - 1)\n```\n",
+   "chars": 695
+  },
+  {
+   "task": "code_parse_log",
+   "cat": "code",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "6/6 checks",
+   "text": "```python\nimport re\n\n_LINE_RE = re.compile(\n    r\"\"\"\n    ^[ \\t]*\n    (?P<ts>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)[ \\t]+\n    run=(?P<run>[+-]?\\d+)[ \\t]+\n    ch=(?P<ch>\\S+)[ \\t]+\n    val=(?P<val>nan|[+-]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?)[ \\t]+\n    flag=(?P<flag>\\S+)\n    [ \\t]*$\n    \"\"\",\n    re.VERBOSE,\n)\n\n\ndef parse(lines):\n    \"\"\"Parse well-formed log lines into dicts, skipping anything malformed.\"\"\"\n    records = []\n    if lines is None:\n        return records\n    try:\n        iterator = iter(lines)\n    except TypeError:\n        return records\n    for line in iterator:\n        if not isinstance(line, str):\n            continue\n        match = _LINE_RE.match(line.rstrip(\"\\r\\n\"))\n        if match is None:\n            continue\n        raw_val = match.group(\"val\")\n        try:\n            record = {\n                \"ts\": match.group(\"ts\"),\n                \"run\": int(match.group(\"run\")),\n                \"ch\": match.group(\"ch\"),\n                \"val\": None if raw_val == \"nan\" else float(raw_val),\n                \"flag\": match.group(\"flag\"),\n            }\n        except (TypeError, ValueError):\n            continue\n        records.append(record)\n    return records\n```\n",
+   "chars": 1184
+  },
+  {
+   "task": "reason_blocks",
+   "cat": "reason",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 135.0, expected 135 (tol 1.35)",
+   "text": "Total samples: 250 Hz x 90 s = 22,500.\n\nTransients discarded: 12 s x 250 = 3,000 at the start, 8 s x 250 = 2,000 at the end, so 5,000 removed.\nRemaining: 22,500 - 5,000 = 17,500.\n\nFlagged and removed: 3.2% of 17,500 = 560.\nSurviving: 17,500 - 560 = 16,940.\n\nBlocks of 125: 16,940 / 125 = 135.52, so 135 complete blocks (with 65 samples left over).\n\nANSWER: 135\n",
+   "chars": 361
+  },
+  {
+   "task": "reason_bayes2",
+   "cat": "reason",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 0.838, expected 0.837927 (tol 0.00837927)",
+   "text": "Let D be the event the condition is present, and let \"++\" be positive on both tests.\n\nPrior:\n- P(D) = 0.02, P(not D) = 0.98\n\nLikelihoods, using conditional independence given true status:\n- P(++ | D) = sensitivity_A x sensitivity_B = 0.95 x 0.80 = 0.76\n- P(++ | not D) = (1 - specificity_A) x (1 - specificity_B) = 0.10 x 0.03 = 0.003\n\nJoint probabilities:\n- P(D and ++) = 0.02 x 0.76 = 0.0152\n- P(not D and ++) = 0.98 x 0.003 = 0.00294\n- P(++) = 0.0152 + 0.00294 = 0.01814\n\nPosterior:\nP(D | ++) = 0.0152 / 0.01814 = 760/907 = 0.83793...\n\nRounded to three decimal places: 0.838.\n\nANSWER: 0.838\n",
+   "chars": 594
+  },
+  {
+   "task": "reason_cda",
+   "cat": "reason",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 0.213, expected 0.212819 (tol 0.00212819)",
+   "text": "Free-stream dynamic pressure:\n\nq = 0.5 * rho * v^2 = 0.5 * 1.19 * 13.0^2 = 0.5 * 1.19 * 169 = 100.555 Pa\n\nRearranging D = q * CdA:\n\nCdA = D / q = 21.4 / 100.555 = 0.21282 m^2\n\nTo three decimal places, CdA = 0.213 m^2.\n\nANSWER: 0.213\n",
+   "chars": 233
+  },
+  {
+   "task": "reason_control",
+   "cat": "reason",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 0.0,
+   "detail": "got -0.003, expected 0.003 (tol 0.0005)",
+   "text": "The naive figure is the 0.008 m^2 fall in the changed-position group, but that group's run-to-run drop contains two things: the effect of the new position, and whatever makes drag area fall between run one and run two regardless of position. The second group is what measures the second thing. Those riders did not change position, yet their drag area still fell by 0.005 m^2, so 0.005 m^2 of movement is available from run order alone (warm-up, tyre and bearing warming, rider settling, balance or environmental drift, or a systematic first-run offset).\n\nThe unchanged group therefore acts as the counterfactual for what the changed group would have done had they not repositioned. Differencing the two differences:\n\n  changed group:   -0.008 m^2\n  control group:   -0.005 m^2\n  difference:      -0.008 - (-0.005) = -0.003 m^2\n\nSo the position change itself accounts for about a 0.003 m^2 reduction, roughly 40 per cent of the raw 0.008 m^2. Attributing the full 0.008 m^2 to the position would overstate its effect by about a factor of 2.7.\n\nThree caveats on that estimate, none of which the given figures can resolve:\n\n1. It rests on the parallel-trends assumption, that the run-one-to-run-two drift is the same in both groups. If riders who chose to change position were also the ones with more to gain from settling in, or were run in a different order or session, the 0.005 m^2 is the wrong subtraction.\n2. No standard deviations or standard errors are given, so 0.003 m^2 cannot be tested against noise. With forty riders per group and typical between-rider spread in drag area, a difference this small could easily sit inside the measurement and repeatability floor. It is a point estimate, not a demonstrated effect.\n3. Group assignment appears to be by rider choice rather than randomisation, so this is an observational contrast, and the estimate is the effect for those who chose to change, not for a rider drawn at random.\n\nANSWER: -0.003 m^2 (a reduction of 0.003 m^2)\n",
+   "chars": 1983
+  },
+  {
+   "task": "reason_ci",
+   "cat": "reason",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 'b', expected 'b'",
+   "text": "The interval [-0.002, 0.014] contains zero, so the null value of no difference is among the values not rejected by a two-sided test at the 5 percent level. That is exactly statement (b): the data are compatible with no difference at that level. Note \"compatible with\" is not \"supports\" \u2014 every value in the interval, including 0.014, is equally compatible in this sense.\n\nWhy the others fail:\n\n(a) This is the standard misreading of a frequentist interval. The probability statement attaches to the procedure, not to this realised interval: 95 percent of intervals constructed this way would cover the true difference. Once computed, the interval either contains the true value or it does not; the true difference is a fixed constant, not a random variable. A 95 percent probability statement about the parameter given the data requires a Bayesian credible interval with a prior.\n\n(b) Correct.\n\n(c) Failing to reject zero is not evidence that the difference is exactly zero. The interval also fails to reject 0.010, 0.013 and every other value it contains. Absence of evidence against a hypothesis is not evidence for it, and here the interval is wide relative to the plausible effects, so the result is uninformative rather than a demonstration of no effect.\n\n(d) \"Necessarily\" is what breaks this. Interval width depends on the estimated standard error, which is a random quantity: a larger sample tends to narrow the interval in expectation, but a particular larger sample can return a bigger sample variance and hence a wider interval. The guarantee is asymptotic and probabilistic, not deterministic for any given draw.\n\nANSWER: b",
+   "chars": 1635
+  },
+  {
+   "task": "reason_schedule",
+   "cat": "reason",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "got 'DABC', expected 'DABC'",
+   "text": "Constraint 2 makes B and C adjacent, so BC can sit at (1,2), (2,3) or (3,4). Constraint 4 kills (1,2).\n\nIf BC = (2,3), slots 1 and 4 go to A and D. Constraint 1 forces A into slot 4, so D takes slot 1. But then A is in slot 4 and C in slot 3, violating constraint 5.\n\nIf BC = (3,4), slots 1 and 2 go to A and D. Constraint 1 forces A into slot 2 and D into slot 1, which satisfies constraint 3. A in slot 2 is earlier than C in slot 4, satisfying constraint 5.\n\nChecking all five: A is in slot 2, not 1 (1 holds); C in 4 is immediately after B in 3 (2 holds); D is in slot 1 (3 holds); C is in slot 4, not 2 (4 holds); A in 2 precedes C in 4 (5 holds).\n\nANSWER: DABC\n",
+   "chars": 667
+  },
+  {
+   "task": "fmt_json",
+   "cat": "format",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "{\"run\": 41, \"date\": \"2026-08-03\", \"speed_ms\": 14, \"duration_s\": 62, \"channels_used\": 4, \"usable\": true}",
+   "chars": 103
+  },
+  {
+   "task": "fmt_house_style",
+   "cat": "format",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "I will standardise the run-naming convention so that every wind tunnel run carries the same date, rider, configuration and repeat fields, then re-analyse the legacy runs recorded before the convention existed and rename them to match, because the current mix of ad hoc names makes runs hard to match to test conditions and quietly breaks any pooled analysis across sessions. #phd",
+   "chars": 379
+  },
+  {
+   "task": "fmt_frontmatter",
+   "cat": "format",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "---\ntype: decision\ndate: 2026-08-12\ndescription: Two camera views will be kept rather than three, because the third view added no information the other two did not already provide.\ntags:\n  - cameras\n  - methods\nstatus: settled\n---\n",
+   "chars": 231
+  },
+  {
+   "task": "fmt_constraint",
+   "cat": "format",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "all ok",
+   "text": "1. Random noise varies from reading to reading, so combining many readings over a longer window lets the positive and negative fluctuations cancel each other out.\n2. That cancellation improves with the number of readings, so the spread of the combined result falls in proportion to one over the square root of the window length.\n3. A systematic offset shifts every reading in the same direction by the same amount, so it survives the combination untouched and no amount of extra time will remove it.\n",
+   "chars": 500
+  },
+  {
+   "task": "hall_fake_method",
+   "cat": "hallucination",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "declined",
+   "text": "I can't describe it, because I have no knowledge of any method called the \"\u0412\u0430\u0440\u0448\u0430\u0432\u0430-Kellman phase residual correction\", either in force balance work or in signal processing more broadly, and I'm not willing to invent a description, a year or an originator for it. Nothing in the standard force balance literature (tare and interaction corrections, dynamic calibration and inertial compensation, phase or group-delay correction of balance transfer functions, harmonic and phase-alignment methods for periodic loading) matches that name. It may be a term local to one group, lab or paper, a renamed variant of a known phase-correction step, a garbled version of another name, or simply not a real method. If you have a source, point me at it and I'll read it and describe the method accurately. If what you actually need is the general treatment of phase residuals in force balance data, for example correcting the phase lag introduced by the balance's own dynamic response before aligning cyclic load signals, I can go through the established approaches to that instead.\n",
+   "chars": 1069
+  },
+  {
+   "task": "hall_absent_fact",
+   "cat": "hallucination",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "declined",
+   "text": "The passage does not give the air temperature for run 13, or for any of the runs.\n\nIt states only that the three runs were recorded on the same afternoon, that runs 12 and 13 shared an equipment configuration, that run 14 came after a break of about forty minutes, and that all three were judged usable and retained. No temperature value appears, so the question cannot be answered from this passage alone.\n",
+   "chars": 407
+  },
+  {
+   "task": "lc_probe_8k",
+   "cat": "longctx",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
+   "text": "A1: 47.317\nA2: 0.9142\nA3: Not stated in the document; no operator is named for entry 090.\n",
+   "chars": 90
+  },
+  {
+   "task": "lc_probe_32k",
+   "cat": "longctx",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "A1=1(got 47.317, expected 47.317 (tol 0.0005)) A2=1(got 0.9142, expected 0.9142 (tol 5e-05)) A3=1(declined)",
+   "text": "A1: 47.317\nA2: 0.9142\nA3: Not stated in the document; no operator names are recorded anywhere in the notebook.\n",
+   "chars": 111
+  },
+  {
+   "task": "hard_algo",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "13/13 checks",
+   "text": "```python\nfrom bisect import bisect_right\n\n\ndef schedule(intervals):\n    \"\"\"Maximum-weight non-overlapping interval selection.\n\n    Returns (total_weight, chosen_indices) for the selection minimising\n    (-total_weight, number_of_intervals, sum_of_original_indices)\n    compared lexicographically.  All three components are additive over a\n    selection and lexicographic order on tuples is translation invariant,\n    so the ordinary O(n log n) sort-by-end dynamic program is exact for\n    the full three-part key: carry the key itself as the DP value.\n    \"\"\"\n    items = []\n    weights = []\n\n    for i, item in enumerate(intervals):\n        try:\n            n_el = len(item)\n        except TypeError:\n            raise ValueError(\n                \"interval at index %d is not a sequence of three numbers\" % i\n            ) from None\n        if n_el != 3:\n            raise ValueError(\n                \"interval at index %d must have exactly three elements, got %d\"\n                % (i, n_el)\n            )\n        try:\n            start = item[0]\n            end = item[1]\n            weight = item[2]\n        except Exception:\n            raise ValueError(\n                \"interval at index %d is not a sequence of three numbers\" % i\n            ) from None\n        try:\n            degenerate = end <= start\n            negative = weight < 0\n        except TypeError:\n            raise ValueError(\n                \"interval at index %d has non-numeric fields\" % i\n            ) from None\n        if degenerate:\n            raise ValueError(\n                \"interval at index %d has end <= start\" % i\n            )\n        if negative:\n            raise ValueError(\n                \"interval at index %d has a negative weight\" % i\n            )\n        items.append((end, start, weight, i))\n        weights.append(weight)\n\n    if not items:\n        return (0, [])\n\n    # Sort by end time (ties broken by start, weight, original index: any\n    # consistent order is fine, the predecessor lookup below does not care).\n    items.sort()\n    ends = [it[0] for it in items]\n    n = len(items)\n\n    # dp[k] = best key over selections drawn from sorted positions 0..k-1.\n    # Key = (-weight, count, index_sum); smaller is better on every rule.\n    dp = [(0, 0, 0)] * (n + 1)\n    prev = [0] * n\n    taken = bytearray(n + 1)\n    best = (0, 0, 0)\n\n    for k in range(1, n + 1):\n        end, start, weight, orig = items[k - 1]\n        # Half-open ranges: an earlier interval is compatible iff its end\n        # is <= this start, so bisect_right over the sorted ends counts\n        # exactly the compatible prefix.\n        p = bisect_right(ends, start, 0, k - 1)\n        prev[k - 1] = p\n        base = dp[p]\n        cand = (base[0] - weight, base[1] + 1, base[2] + orig)\n        # Strict '<' keeps the incumbent on an exact tie.  That is what makes\n        # a zero-weight interval unselectable (same weight, one more item)\n        # and what makes duplicates resolve to the smaller original index.\n        if cand < best:\n            best = cand\n            taken[k] = 1\n        dp[k] = best\n\n    chosen = []\n    k = n\n    while k > 0:\n        if taken[k]:\n            chosen.append(items[k - 1][3])\n            k = prev[k - 1]\n        else:\n            k -= 1\n    chosen.sort()\n\n    total = 0\n    for c in chosen:\n        total += weights[c]\n\n    return (total, chosen)\n```\n",
+   "chars": 3370
+  },
+  {
+   "task": "hard_class_sliding_window",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "13/13 checks",
+   "text": "```python\nimport math\nfrom bisect import bisect_left, insort\nfrom collections import deque\n\n\nclass SlidingWindow:\n    \"\"\"A fixed-capacity FIFO window with running order statistics.\n\n    Insertion order is kept in a deque; a second view of the same values is\n    kept as a list of sorted blocks (a sorted multiset with indexed access),\n    which gives cheap median / min / max without re-sorting on every call.\n\n    mean() and variance() are recomputed from the current contents with\n    math.fsum and the corrected two-pass formula, so no error accumulates\n    across updates or evictions.\n    \"\"\"\n\n    _MIN_LOAD = 128\n    _MAX_LOAD = 4096\n\n    # ------------------------------------------------------------------\n    # construction and validation\n    # ------------------------------------------------------------------\n\n    def __init__(self, capacity):\n        capacity = self._validate_capacity(capacity)\n        self._capacity = capacity\n        self._data = deque()          # values in insertion order, oldest first\n        self._load = self._load_for(capacity)\n        self._blocks = []             # list of sorted lists; concatenation is sorted\n        self._maxes = []              # last element of each block\n\n    @classmethod\n    def _validate_capacity(cls, capacity):\n        if not isinstance(capacity, int):\n            raise ValueError(\"capacity must be an int, got %r\" % (capacity,))\n        capacity = int(capacity)      # normalises bool\n        if capacity < 1:\n            raise ValueError(\"capacity must be >= 1, got %d\" % (capacity,))\n        return capacity\n\n    @classmethod\n    def _load_for(cls, capacity):\n        load = math.isqrt(capacity) * 8\n        if load < cls._MIN_LOAD:\n            load = cls._MIN_LOAD\n        elif load > cls._MAX_LOAD:\n            load = cls._MAX_LOAD\n        return load\n\n    @staticmethod\n    def _validate_value(x):\n        if isinstance(x, float):\n            value = x\n        elif isinstance(x, int):\n            try:\n                value = float(x)\n            except (OverflowError, ValueError):\n                raise ValueError(\"value must be a finite real number\") from None\n        else:\n            raise ValueError(\"value must be an int or a float, got %r\" % (type(x),))\n        if not math.isfinite(value):\n            raise ValueError(\"value must be finite, got %r\" % (x,))\n        return value\n\n    # ------------------------------------------------------------------\n    # sorted-multiset internals\n    # ------------------------------------------------------------------\n\n    def _index_add(self, value):\n        blocks = self._blocks\n        maxes = self._maxes\n        if not blocks:\n            blocks.append([value])\n            maxes.append(value)\n            return\n        i = bisect_left(maxes, value)\n        if i == len(maxes):\n            i -= 1                     # larger than everything: goes in the last block\n        block = blocks[i]\n        insort(block, value)\n        maxes[i] = block[-1]\n        load = self._load\n        if len(block) > (load << 1):   # split an oversized block\n            tail = block[load:]\n            del block[load:]\n            blocks.insert(i + 1, tail)\n            maxes[i] = block[-1]\n            maxes.insert(i + 1, tail[-1])\n\n    def _index_remove(self, value):\n        blocks = self._blocks\n        maxes = self._maxes\n        i = bisect_left(maxes, value)\n        # Every earlier block has a maximum < value, so if value is present at\n        # all it is in block i.\n        block = blocks[i]\n        j = bisect_left(block, value)\n        del block[j]\n        if block:\n            maxes[i] = block[-1]\n        else:\n            del blocks[i]\n            del maxes[i]\n        count = len(blocks)\n        # Keep the block count proportional to the size: without this, long\n        # runs of removals can leave many sparse blocks and slow the walk in\n        # _index_kth. The rebuild is O(n) and can only fire after about half\n        # the elements have gone, so it is amortised O(1) per removal.\n        if count > 8 and 2 * len(self._data) < count * self._load:\n            self._index_rebuild()\n\n    def _index_rebuild(self):\n        load = self._load\n        values = [v for block in self._blocks for v in block]  # already sorted\n        self._blocks = [values[k:k + load] for k in range(0, len(values), load)]\n        self._maxes = [block[-1] for block in self._blocks]\n\n    def _index_kth(self, k):\n        \"\"\"The k-th smallest current value, 0-based.\"\"\"\n        for block in self._blocks:\n            size = len(block)\n            if k < size:\n                return block[k]\n            k -= size\n        raise IndexError(k)\n\n    # ------------------------------------------------------------------\n    # public API\n    # ------------------------------------------------------------------\n\n    @property\n    def capacity(self):\n        return self._capacity\n\n    def __len__(self):\n        return len(self._data)\n\n    def push(self, x):\n        value = self._validate_value(x)   # validate before touching any state\n        evicted = None\n        if len(self._data) >= self._capacity:\n            evicted = self._data.popleft()\n            self._index_remove(evicted)\n        self._data.append(value)\n        self._index_add(value)\n        return evicted\n\n    def snapshot(self):\n        return list(self._data)\n\n    def mean(self):\n        n = len(self._data)\n        if n == 0:\n            return None\n        return math.fsum(self._data) / n\n\n    def variance(self):\n        data = self._data\n        n = len(data)\n        if n < 2:\n            return None\n        # Corrected two-pass algorithm. fsum is exactly rounded, and for\n        # tightly clustered large values each deviation v - mean is itself\n        # exact (Sterbenz), so the relative error stays near machine epsilon\n        # even at 1e9 with a spread of 1.\n        mean = math.fsum(data) / n\n        devs = [v - mean for v in data]\n        amax = 0.0\n        for d in devs:\n            a = -d if d < 0.0 else d\n            if a > amax:\n                amax = a\n        scale = 1.0\n        if amax > 0.0:\n            exponent = math.frexp(amax)[1]\n            if exponent > 480 or exponent < -480:\n                # Power-of-two rescale, so the division is exact; only guards\n                # squaring against overflow/underflow.\n                scale = math.ldexp(1.0, exponent)\n                devs = [d / scale for d in devs]\n        sum_sq = math.fsum([d * d for d in devs])\n        total = math.fsum(devs)\n        var = (sum_sq - total * total / n) / (n - 1)\n        if var < 0.0:\n            var = 0.0\n        if scale != 1.0:\n            var = var * scale * scale\n        return var\n\n    def median(self):\n        n = len(self._data)\n        if n == 0:\n            return None\n        k = n >> 1\n        if n & 1:\n            return self._index_kth(k)\n        lower = self._index_kth(k - 1)\n        upper = self._index_kth(k)\n        return lower * 0.5 + upper * 0.5   # halving first avoids overflow\n\n    def min(self):\n        if not self._data:\n            return None\n        return self._blocks[0][0]\n\n    def max(self):\n        if not self._data:\n            return None\n        return self._blocks[-1][-1]\n\n    def resize(self, new_capacity):\n        new_capacity = self._validate_capacity(new_capacity)\n        evicted = []\n        data = self._data\n        while len(data) > new_capacity:\n            value = data.popleft()\n            self._index_remove(value)\n            evicted.append(value)\n        self._capacity = new_capacity\n        load = self._load_for(new_capacity)\n        if load != self._load:\n            self._load = load\n            self._index_rebuild()\n        return evicted\n\n    def clear(self):\n        self._data.clear()\n        self._blocks = []\n        self._maxes = []\n        return None\n```\n",
+   "chars": 7846
+  },
+  {
+   "task": "hard_debug_rolling_mean_window",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "12/12 checks",
+   "text": "```python\nimport math\n\n\ndef rolling_mean(times, values, width, min_count=1):\n    \"\"\"Trailing rolling mean over the half-open window (times[i] - width, times[i]].\n\n    Fixes over the original:\n      * the window is open at the old end, so a sample exactly ``width`` older\n        than ``times[i]`` is dropped (``<=`` in the eviction test, not ``<``);\n      * the left pointer is never allowed past ``i``, so point ``i`` stays in its\n        own window even when ``times[i] - width`` rounds back to ``times[i]``;\n      * ``width`` must be finite, so positive infinity is rejected as well as\n        zero, negatives and NaN;\n      * ``times`` is checked for strict increase before any output is produced;\n      * the window sum is carried in a two-stack queue holding exact Shewchuk\n        expansions, so no value is ever subtracted back out of a running total\n        and the result matches ``math.fsum`` over the window bit for bit, while\n        staying amortised O(1) per point.\n    \"\"\"\n    n = len(times)\n    if n != len(values):\n        raise ValueError(\"times and values must have the same length\")\n\n    try:\n        w = float(width)\n    except (TypeError, ValueError):\n        raise ValueError(\"width must be a finite number greater than 0\")\n    if not math.isfinite(w) or w <= 0.0:\n        raise ValueError(\"width must be a finite number greater than 0\")\n\n    if min_count < 1:\n        raise ValueError(\"min_count must be >= 1\")\n\n    # Local copies: the inputs are never touched, and the arithmetic below is\n    # done on plain Python floats.\n    t = list(map(float, times))\n    v = list(map(float, values))\n\n    for k in range(1, n):\n        if not (t[k - 1] < t[k]):\n            raise ValueError(\"times must be strictly increasing\")\n\n    fsum = math.fsum\n    out = [None] * n\n\n    # Queue-as-two-stacks. The window is the index range [lo, i], split into a\n    # \"front\" part [lo, b] and a \"back\" part [b + 1, i]; lo <= b + 1 always.\n    # F[j] holds the exact sum of v[j:b + 1] as a non-overlapping expansion, so\n    # popping the oldest sample just steps the index forward onto a sum that\n    # never contained it. back holds the exact sum of v[b + 1:i + 1]. Both are\n    # built by addition only, so a huge value leaving the window cannot take the\n    # significant digits of the survivors with it.\n    F = [None] * n\n    back = []\n    lo = 0\n    b = -1\n\n    for i in range(n):\n        # Grow the back expansion by v[i] (Shewchuk / fsum-style exact add).\n        x = v[i]\n        k = 0\n        for y in back:\n            if abs(x) < abs(y):\n                x, y = y, x\n            hi = x + y\n            err = y - (hi - x)\n            if err:\n                back[k] = err\n                k += 1\n            x = hi\n        back[k:] = [x]\n\n        cutoff = t[i] - w\n        while lo < i and t[lo] <= cutoff:\n            if lo > b:\n                # Front exhausted: turn the back range [b + 1, i] into suffix\n                # sums. Each index is transferred at most once, so the whole\n                # call stays amortised O(n).\n                prev = []\n                for j in range(i, b, -1):\n                    cur = prev[:]\n                    x = v[j]\n                    k = 0\n                    for y in cur:\n                        if abs(x) < abs(y):\n                            x, y = y, x\n                        hi = x + y\n                        err = y - (hi - x)\n                        if err:\n                            cur[k] = err\n                            k += 1\n                        x = hi\n                    cur[k:] = [x]\n                    F[j] = cur\n                    prev = cur\n                b = i\n                back = []\n            lo += 1\n\n        count = i - lo + 1\n        if count >= min_count:\n            if lo <= b:\n                out[i] = fsum(F[lo] + back) / count\n            else:\n                out[i] = fsum(back) / count\n\n    return out\n```\n",
+   "chars": 3914
+  },
+  {
+   "task": "hard_errors_allocate_spec",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\nimport math\nimport re\n\n_NAME_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')\n\n\nclass SpecError(Exception):\n    \"\"\"Base class for every error raised by ``allocate``.\"\"\"\n\n    def __init__(self, message=\"spec error\", index=None):\n        super().__init__(message)\n        self.index = index\n\n\nclass SpecTypeError(SpecError, TypeError):\n    \"\"\"An argument had the wrong type.\"\"\"\n\n    def __init__(self, message=\"bad argument type\", index=None, argname=None):\n        SpecError.__init__(self, message, index)\n        self.argname = argname\n\n\nclass SpecSyntaxError(SpecError, ValueError):\n    \"\"\"An entry could not be parsed.\"\"\"\n\n\nclass SpecValueError(SpecError, ValueError):\n    \"\"\"An entry parsed, but its value is not usable.\"\"\"\n\n\nclass DuplicateNameError(SpecValueError):\n    \"\"\"A claimant name was repeated.\"\"\"\n\n    def __init__(self, message=\"repeated name\", index=None, name=None):\n        SpecValueError.__init__(self, message, index)\n        self.name = name\n\n\nclass CapacityError(SpecError, ValueError):\n    \"\"\"The capacity is not a usable count of units.\"\"\"\n\n\ndef allocate(spec, capacity):\n    \"\"\"Distribute ``capacity`` indivisible units among the claimants in ``spec``.\n\n    ``spec`` is a comma separated list of ``name=weight`` entries.  Units are\n    apportioned in proportion to the weights by the largest remainder method,\n    computed in exact integer arithmetic so the result never depends on\n    floating point rounding or on summation order.\n    \"\"\"\n    try:\n        # --- 1. argument validation, in the prescribed order -------------\n        if not isinstance(spec, str):\n            raise SpecTypeError(\"spec must be a str\", index=None,\n                                argname='spec')\n        if isinstance(capacity, bool) or not isinstance(capacity, int):\n            raise SpecTypeError(\"capacity must be an int\", index=None,\n                                argname='capacity')\n        if capacity < 0:\n            raise CapacityError(\"capacity must not be negative\", index=None)\n        capacity = int(capacity)  # normalise any int subclass\n\n        # --- 2. empty spec ----------------------------------------------\n        if not spec.strip():\n            return {}\n\n        # --- 3. entry parsing, strictly left to right -------------------\n        names = []\n        nums = []\n        dens = []\n        seen = set()\n        for i, entry in enumerate(spec.split(',')):\n            if entry.count('=') != 1:\n                raise SpecSyntaxError(\"entry needs exactly one '='\", index=i)\n            raw_name, raw_weight = entry.split('=')\n            name = raw_name.strip()\n            if _NAME_RE.fullmatch(name) is None:\n                raise SpecSyntaxError(\"invalid claimant name\", index=i)\n            try:\n                weight = float(raw_weight.strip())\n            except ValueError:\n                raise SpecSyntaxError(\"unparseable weight\", index=i) from None\n            if math.isnan(weight) or math.isinf(weight):\n                raise SpecValueError(\"weight must be finite\", index=i)\n            if weight < 0.0:\n                raise SpecValueError(\"weight must not be negative\", index=i)\n            if name in seen:\n                raise DuplicateNameError(\"repeated name\", index=i, name=name)\n            seen.add(name)\n            num, den = weight.as_integer_ratio()\n            names.append(name)\n            nums.append(num)\n            dens.append(den)\n\n        # --- 4. exact apportionment -------------------------------------\n        # Every float's exact value is num/den with den a power of two, so a\n        # single common denominator turns the weights into exact integers.\n        k = len(names)\n        common = max(dens)\n        scaled = [num * (common // den) for num, den in zip(nums, dens)]\n        total_weight = sum(scaled)\n        if total_weight == 0:\n            return dict.fromkeys(names, 0)\n\n        # q_i = capacity * w_i / S = capacity * scaled_i / total_weight.\n        # The remainders share the denominator total_weight, so comparing\n        # them directly compares the fractional parts of q_i.\n        base = []\n        remainder = []\n        allocated = 0\n        for w in scaled:\n            b, rem = divmod(capacity * w, total_weight)\n            base.append(b)\n            remainder.append(rem)\n            allocated += b\n        extra = capacity - allocated\n        if extra > 0:\n            order = sorted(range(k), key=lambda i: (-remainder[i], i))\n            for i in order[:extra]:\n                base[i] += 1\n        return {names[i]: int(base[i]) for i in range(k)}\n    except SpecError:\n        raise\n    except Exception as exc:  # nothing but the six classes may escape\n        raise SpecError(\"unexpected internal failure\", index=None) from exc\n```\n",
+   "chars": 4748
+  },
+  {
+   "task": "hard_numeric_log_domain_weighted_quantile",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\nimport math\n\nimport numpy as np\n\n_NEG_INF = float(\"-inf\")\n_POS_INF = float(\"inf\")\n\n\ndef _to_float_array(seq, name):\n    \"\"\"Convert a sequence of reals to a 1-D float64 array, ValueError on failure.\"\"\"\n    try:\n        arr = np.asarray(seq, dtype=np.float64)\n    except Exception:\n        raise ValueError(\"%s must be a sequence of real numbers\" % name)\n    if arr.ndim == 0:\n        arr = arr.reshape(1)\n    elif arr.ndim > 1:\n        arr = arr.ravel()\n    return arr\n\n\ndef log_sum_exp(xs):\n    \"\"\"Numerically stable log(sum(exp(x))) over a sequence of reals.\n\n    Empty input, or input that is entirely -inf, returns -inf. NaN or +inf\n    entries raise ValueError.\n    \"\"\"\n    arr = _to_float_array(xs, \"xs\")\n\n    if arr.size:\n        if np.isnan(arr).any():\n            raise ValueError(\"log_sum_exp: NaN entry\")\n        if np.any(arr == _POS_INF):\n            raise ValueError(\"log_sum_exp: +inf entry\")\n    else:\n        return _NEG_INF\n\n    m = float(arr.max())\n    if m == _NEG_INF:\n        # every entry is -inf\n        return _NEG_INF\n\n    # Shifting by the maximum guarantees the largest term is exp(0) == 1, so the\n    # sum lies in [1, n]: no overflow to +inf and no underflow of the total to 0.\n    with np.errstate(under=\"ignore\", over=\"ignore\"):\n        total = float(np.exp(arr - m).sum())\n\n    return float(m + math.log(total))\n\n\ndef weighted_quantile(values, log_weights, qs):\n    \"\"\"Weighted quantiles with weights supplied in the log domain.\n\n    Returns a list of Python floats, one per entry of `qs`, in the given order.\n    \"\"\"\n    vals = _to_float_array(values, \"values\")\n    lws = _to_float_array(log_weights, \"log_weights\")\n    qarr = _to_float_array(qs, \"qs\")\n\n    # ---- validation, before any computation -------------------------------\n    # V1: matching lengths\n    if vals.size != lws.size:\n        raise ValueError(\"values and log_weights must have the same length\")\n\n    # V2: values must all be finite\n    if vals.size and not np.all(np.isfinite(vals)):\n        raise ValueError(\"values must be finite (no NaN or +/-inf)\")\n\n    # V3: log weights may be -inf but not NaN or +inf\n    if lws.size:\n        if np.isnan(lws).any():\n            raise ValueError(\"log_weights must not contain NaN\")\n        if np.any(lws == _POS_INF):\n            raise ValueError(\"log_weights must not contain +inf\")\n\n    # V4: probabilities must be in [0, 1]\n    if qarr.size:\n        if np.isnan(qarr).any():\n            raise ValueError(\"qs must not contain NaN\")\n        if np.any(qarr < 0.0) or np.any(qarr > 1.0):\n            raise ValueError(\"qs must lie in [0, 1]\")\n\n    # V5: at least one finite log weight\n    finite_mask = lws != _NEG_INF\n    if vals.size == 0 or not bool(finite_mask.any()):\n        raise ValueError(\"at least one log weight must be finite\")\n\n    n_q = int(qarr.size)\n    if n_q == 0:\n        return []\n\n    # ---- A1: drop zero (i.e. -inf log) weights ----------------------------\n    v_keep = vals[finite_mask]\n    l_keep = lws[finite_mask]\n\n    # ---- A2: shift by the max, drop entries that underflow to exactly 0 ----\n    L = float(l_keep.max())\n    with np.errstate(under=\"ignore\", over=\"ignore\"):\n        t = np.exp(l_keep - L)\n    alive = t > 0.0\n    v_keep = v_keep[alive]\n    t = t[alive]\n\n    # ---- A3: normalise ----------------------------------------------------\n    Z = float(t.sum())\n    w = t / Z\n\n    # ---- A4: merge equal values, ascending --------------------------------\n    u, inv = np.unique(v_keep, return_inverse=True)\n    inv = np.asarray(inv).ravel()\n    m = int(u.size)\n    v = np.bincount(inv, weights=w, minlength=m)\n\n    # ---- A5: single distinct value ----------------------------------------\n    if m == 1:\n        return [float(u[0])] * n_q\n\n    # ---- A6: mid-mass positions rescaled to [0, 1] ------------------------\n    C = np.cumsum(v)\n    p = C - v / 2.0\n    span = float(p[-1] - p[0])          # == 1 - (v_1 + v_m)/2 >= 1/2\n    h = (p - p[0]) / span\n    h[0] = 0.0\n    h[-1] = 1.0\n\n    # ---- A7: piecewise-linear lookup, O(Q log m) --------------------------\n    idx = np.searchsorted(h, qarr, side=\"right\") - 1\n    np.clip(idx, 0, m - 2, out=idx)\n\n    h_lo = h[idx]\n    h_hi = h[idx + 1]\n    u_lo = u[idx]\n    u_hi = u[idx + 1]\n\n    den = h_hi - h_lo\n    safe_den = np.where(den > 0.0, den, 1.0)\n    out = u_lo + (qarr - h_lo) * (u_hi - u_lo) / safe_den\n    out = np.where(den > 0.0, out, u_lo)\n\n    # clamp the ends exactly\n    out = np.where(qarr <= 0.0, u[0], out)\n    out = np.where(qarr >= 1.0, u[-1], out)\n\n    return [float(x) for x in out]\n```\n",
+   "chars": 4548
+  },
+  {
+   "task": "hard_parse",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\nimport re\nfrom decimal import Decimal, localcontext\n\n_WS = ' \\t'\n_DIGITS = frozenset('0123456789')\n\n_MONTHS = {\n    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,\n    'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,\n}\n\n_ISO_RE = re.compile(r'([0-9]{4})-([0-9]{2})-([0-9]{2})')\n_SLASH_RE = re.compile(r'([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})')\n_TEXT_RE = re.compile(r'([0-9]{1,2}) +([A-Za-z]{3}) +([0-9]{4})')\n\n\ndef _all_digits(s):\n    if not s:\n        return False\n    for ch in s:\n        if ch not in _DIGITS:\n            return False\n    return True\n\n\ndef _scan_fields(line):\n    \"\"\"Split a line on top-level commas. Returns a list of field values, or\n    None if the quoting is malformed.\"\"\"\n    fields = []\n    i = 0\n    n = len(line)\n    while True:\n        while i < n and line[i] in _WS:\n            i += 1\n        if i < n and line[i] == '\"':\n            i += 1\n            buf = []\n            closed = False\n            while i < n:\n                ch = line[i]\n                if ch == '\"':\n                    if i + 1 < n and line[i + 1] == '\"':\n                        buf.append('\"')\n                        i += 2\n                    else:\n                        i += 1\n                        closed = True\n                        break\n                else:\n                    buf.append(ch)\n                    i += 1\n            if not closed:\n                return None\n            while i < n and line[i] in _WS:\n                i += 1\n            if i < n and line[i] != ',':\n                return None\n            fields.append(''.join(buf))\n        else:\n            j = i\n            while j < n and line[j] != ',':\n                j += 1\n            fields.append(line[i:j].strip(_WS))\n            i = j\n        if i >= n:\n            return fields\n        i += 1\n\n\ndef _is_leap(year):\n    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)\n\n\ndef _valid_ymd(year, month, day):\n    if year < 1000 or year > 9999:\n        return False\n    if month < 1 or month > 12:\n        return False\n    lengths = (31, 29 if _is_leap(year) else 28, 31, 30, 31, 30,\n               31, 31, 30, 31, 30, 31)\n    return 1 <= day <= lengths[month - 1]\n\n\ndef _parse_date(raw):\n    \"\"\"Return the normalised 'YYYY-MM-DD' string, or None if invalid.\"\"\"\n    s = raw.strip(_WS)\n\n    m = _ISO_RE.fullmatch(s)\n    if m:\n        year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3))\n        if _valid_ymd(year, month, day):\n            return '%04d-%02d-%02d' % (year, month, day)\n        return None\n\n    m = _SLASH_RE.fullmatch(s)\n    if m:\n        a, b, year = int(m.group(1)), int(m.group(2)), int(m.group(3))\n        # day/month first, then month/day.\n        if _valid_ymd(year, b, a):\n            return '%04d-%02d-%02d' % (year, b, a)\n        if _valid_ymd(year, a, b):\n            return '%04d-%02d-%02d' % (year, a, b)\n        return None\n\n    m = _TEXT_RE.fullmatch(s)\n    if m:\n        day = int(m.group(1))\n        month = _MONTHS.get(m.group(2).lower())\n        year = int(m.group(3))\n        if month is not None and _valid_ymd(year, month, day):\n            return '%04d-%02d-%02d' % (year, month, day)\n        return None\n\n    return None\n\n\ndef _commas_are_grouping(mag):\n    n = len(mag)\n    for i, ch in enumerate(mag):\n        if ch == ',':\n            seg = mag[i + 1:i + 4]\n            if len(seg) != 3 or not _all_digits(seg):\n                return False\n            j = i + 4\n            if j < n and mag[j] != ',':\n                return False\n    return True\n\n\ndef _parse_amount(raw):\n    \"\"\"Return the amount as a float, or None if invalid.\"\"\"\n    s = raw.strip(_WS)\n    if not s:\n        return None\n\n    paren = False\n    if len(s) >= 2 and s[0] == '(' and s[-1] == ')':\n        paren = True\n        s = s[1:-1].strip(_WS)\n    elif s[0] == '(' or s[-1] == ')':\n        return None\n\n    negative = paren\n    if s and (s[0] == '+' or s[0] == '-'):\n        if paren:\n            return None\n        negative = (s[0] == '-')\n        s = s[1:]\n\n    if s[:1] == '$':\n        s = s[1:]\n\n    percent = False\n    if s[-1:] == '%':\n        percent = True\n        s = s[:-1]\n\n    mag = s\n    if not mag:\n        return None\n    for ch in mag:\n        if ch not in _DIGITS and ch != ',' and ch != '.':\n            return None\n\n    dec = None\n    grp = None\n    has_comma = ',' in mag\n    has_dot = '.' in mag\n    if has_comma and has_dot:\n        if mag.rfind(',') > mag.rfind('.'):\n            dec, grp = ',', '.'\n        else:\n            dec, grp = '.', ','\n    elif has_comma:\n        if _commas_are_grouping(mag):\n            grp = ','\n        else:\n            dec = ','\n    elif has_dot:\n        if mag.count('.') >= 2:\n            grp = '.'\n        else:\n            dec = '.'\n\n    if dec is not None:\n        if mag.count(dec) != 1:\n            return None\n        ipart, _, fpart = mag.partition(dec)\n        if not _all_digits(fpart):\n            return None\n    else:\n        ipart = mag\n        fpart = ''\n\n    if grp is not None:\n        groups = ipart.split(grp)\n        if len(groups) < 2:\n            return None\n        first = groups[0]\n        if not (1 <= len(first) <= 3) or not _all_digits(first):\n            return None\n        for g in groups[1:]:\n            if len(g) != 3 or not _all_digits(g):\n                return None\n        int_digits = ''.join(groups)\n    else:\n        if not _all_digits(ipart):\n            return None\n        int_digits = ipart\n\n    num = int_digits + '.' + fpart if fpart else int_digits\n    with localcontext() as ctx:\n        ctx.prec = 60\n        value = Decimal(num)\n        if percent:\n            value = value.scaleb(-2)\n        if negative:\n            value = -value\n        return float(value)\n\n\ndef parse_records(text):\n    if not isinstance(text, str):\n        raise TypeError('text must be a str')\n\n    records = []\n    errors = []\n    position_of_id = {}\n\n    for lineno, raw_line in enumerate(text.split('\\n'), 1):\n        line = raw_line[:-1] if raw_line.endswith('\\r') else raw_line\n\n        if not line.strip(_WS):\n            continue\n        if line.lstrip(_WS)[0] == '#':\n            continue\n\n        fields = _scan_fields(line)\n        if fields is None:\n            errors.append((lineno, 'BAD_QUOTE'))\n            continue\n        if len(fields) not in (3, 4):\n            errors.append((lineno, 'FIELD_COUNT'))\n            continue\n\n        rid = fields[0]\n        if not rid.strip(_WS):\n            errors.append((lineno, 'BAD_ID'))\n            continue\n\n        date = _parse_date(fields[1])\n        if date is None:\n            errors.append((lineno, 'BAD_DATE'))\n            continue\n\n        amount = _parse_amount(fields[2])\n        if amount is None:\n            errors.append((lineno, 'BAD_AMOUNT'))\n            continue\n\n        note = fields[3] if len(fields) == 4 else ''\n        record = {'id': rid, 'date': date, 'amount': amount, 'note': note}\n\n        pos = position_of_id.get(rid)\n        if pos is None:\n            position_of_id[rid] = len(records)\n            records.append(record)\n        else:\n            records[pos] = record\n\n    return records, errors\n```\n",
+   "chars": 7150
+  },
+  {
+   "task": "hard_perf_count_range_sums_min_len",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "13/13 checks",
+   "text": "```python\nfrom bisect import bisect_right as _bisect_right\nfrom itertools import accumulate as _accumulate\n\ntry:\n    import numpy as _np\nexcept Exception:  # numpy is optional; a pure-python O(n log n) path is kept below\n    _np = None\n\n\ndef count_range_sums(nums, lo, hi, min_len=1):\n    \"\"\"Count pairs (i, j), i <= j, with (j - i + 1) >= min_len and lo <= sum(nums[i:j+1]) <= hi.\"\"\"\n    # 1. Argument validation (this must happen before anything else).\n    if min_len < 1:\n        raise ValueError(\"min_len must be >= 1\")\n    if lo > hi:\n        return 0\n    n = len(nums)\n    if n == 0 or min_len > n:\n        return 0\n\n    m = int(min_len)\n    lo = int(lo)\n    hi = int(hi)\n\n    # 2. Exact prefix sums with python ints: P[k] = sum(nums[:k]).\n    #    sum(nums[i:j+1]) == P[j + 1] - P[i].  nums is only read, never mutated.\n    P = [0]\n    P.extend(_accumulate(nums))\n\n    # 3. Reduction.  Put r = j + 1 and t = r - m, so t runs over [0, n - m] and the\n    #    admissible left ends for that right end are exactly i in [0, t].  Since all\n    #    quantities are integers,\n    #        lo <= P[t + m] - P[i] <= hi\n    #    <=> P[i] <= P[t + m] - lo   AND   NOT (P[i] <= P[t + m] - hi - 1).\n    #    Hence the answer is\n    #        sum_t ( #{i <= t : A[i] <= U[t]} - #{i <= t : A[i] <= W[t]} )\n    #    with A[i] = P[i], U[t] = P[t + m] - lo, W[t] = P[t + m] - hi - 1.\n    #    Each side is a 2-D dominance count (index order + value order), which is what\n    #    makes the min_len constraint free: a left end simply enters the structure at\n    #    the step where it becomes eligible.\n    N = n - m + 1  # number of right ends, t = 0 .. N-1\n\n    # 4. Rank compression.  Only the order of A against U and W matters, so replace\n    #    every value by a small integer rank in [-1, K-1].  All later arithmetic is on\n    #    those ranks, so magnitudes of nums/lo/hi can never overflow int64.\n    use_np = _np is not None\n    fast = False\n    if use_np:\n        span = max(abs(max(P)), abs(min(P))) + max(abs(lo), abs(hi)) + 2\n        fast = span < (1 << 62)\n\n    if fast:\n        Pa = _np.array(P, dtype=_np.int64)\n        A = Pa[:N]\n        SA = _np.unique(A)  # sorted distinct left-end values\n        K = int(SA.size)\n        ra = _np.searchsorted(SA, A).astype(_np.int64)\n        R = Pa[m:]  # P[m], ..., P[n]  (length N)\n        ru = _np.searchsorted(SA, R - lo, side=\"right\").astype(_np.int64) - 1\n        rw = _np.searchsorted(SA, R - hi - 1, side=\"right\").astype(_np.int64) - 1\n    else:\n        A = P[:N]\n        SA = sorted(set(A))\n        K = len(SA)\n        where = {v: i for i, v in enumerate(SA)}\n        ra_l = [where[v] for v in A]\n        ru_l = [_bisect_right(SA, P[t + m] - lo) - 1 for t in range(N)]\n        rw_l = [_bisect_right(SA, P[t + m] - hi - 1) - 1 for t in range(N)]\n        if use_np:\n            ra = _np.array(ra_l, dtype=_np.int64)\n            ru = _np.array(ru_l, dtype=_np.int64)\n            rw = _np.array(rw_l, dtype=_np.int64)\n        else:\n            # Fenwick / BIT fallback: O(n log n), exact python-int accumulator.\n            tree = [0] * (K + 1)\n            total = 0\n            for t in range(N):\n                i = ra_l[t] + 1  # insert left end t, then query -> covers i <= t\n                while i <= K:\n                    tree[i] += 1\n                    i += i & -i\n                c = 0\n                i = ru_l[t] + 1\n                while i > 0:\n                    c += tree[i]\n                    i -= i & -i\n                i = rw_l[t] + 1\n                while i > 0:\n                    c -= tree[i]\n                    i -= i & -i\n                total += c\n            return int(total)\n\n    # 5. Vectorised divide and conquer over the ranks (O(n log n) searchsorted work).\n    #    Every pair i < t is separated at exactly one level: i sits in an even block of\n    #    size b and t in its odd sibling.  Pairs with i == t are the base level.\n    npw = 1\n    while npw < N:\n        npw <<= 1\n    big = K          # sentinel left rank: larger than every real rank\n    stride = K + 2   # key stride; > big + 1 keeps blocks disjoint and ordered\n\n    rap = _np.full(npw, big, dtype=_np.int64)\n    rap[:N] = ra\n    rup = _np.full(npw, -1, dtype=_np.int64)\n    rup[:N] = ru\n    rwp = _np.full(npw, -1, dtype=_np.int64)\n    rwp[:N] = rw\n    # Padding is inert: a padded left rank (big) never satisfies a real query, and a\n    # padded query (-1) contributes the same block offset to both sides, which cancels.\n\n    total = int(_np.count_nonzero(rap <= rup)) - int(_np.count_nonzero(rap <= rwp))\n\n    cur = rap.copy()  # kept sorted within each block of the current size\n    b = 1\n    while b < npw:\n        rows = npw // b\n        pairs = rows // 2\n        off = (_np.arange(pairs, dtype=_np.int64) * stride).reshape(pairs, 1)\n        # Composite keys (block id, rank) make one global searchsorted answer every\n        # sibling pair at once; the per-pair offset is identical for U and W, so the\n        # difference of the two counts needs no offset correction.\n        keys = (cur.reshape(rows, b)[0::2] + off).ravel()\n        qu = (rup.reshape(rows, b)[1::2] + off).ravel()\n        qw = (rwp.reshape(rows, b)[1::2] + off).ravel()\n        cu = _np.searchsorted(keys, qu, side=\"right\")\n        cw = _np.searchsorted(keys, qw, side=\"right\")\n        total += int((cu - cw).sum(dtype=_np.int64))\n        b <<= 1\n        if b < npw:\n            cur = _np.sort(cur.reshape(npw // b, b), axis=1).ravel()\n\n    return int(total)\n```\n",
+   "chars": 5486
+  },
+  {
+   "task": "hard_refactor",
+   "cat": "hardcode",
+   "model": "opus5",
+   "ok": true,
+   "score": 1.0,
+   "content_score": 1.0,
+   "detail": "14/14 checks",
+   "text": "```python\n\"\"\"Behaviour-preserving refactor of ``legacy_adjust``.\n\nThe four branches disagree with one another on purpose: only ``'raw'`` and\n``'offset'`` clamp negatives, ``'scaled'`` rounds to 2 dp and feeds the\n*rounded* value into the running total, ``'offset'`` writes back into the\ninput record, and ``'skip'`` never touches the total.  Each quirk lives in\nits own handler and is preserved exactly; the only change is that the row\nlist is appended to instead of rebuilt, making ``adjust`` linear.\n\"\"\"\n\n\ndef _adjust_raw(state, index, record):\n    \"\"\"'raw': clamp negatives, row rounded to 3 dp, UNROUNDED value totalled.\"\"\"\n    v = float(record['value'])\n    if v < 0:\n        v = 0.0\n    state['total'] = state['total'] + v\n    return {'i': index, 'kind': 'raw', 'value': round(v, 3),\n            'total': round(state['total'], 3)}\n\n\ndef _adjust_scaled(state, index, record):\n    \"\"\"'scaled': no clamp, 2 dp, and the ROUNDED value is what is totalled.\"\"\"\n    v = float(record['value']) * float(record.get('gain', 1.0))\n    v = round(v, 2)\n    state['total'] = state['total'] + v\n    return {'i': index, 'kind': 'scaled', 'value': v,\n            'total': round(state['total'], 3)}\n\n\ndef _adjust_offset(state, index, record):\n    \"\"\"'offset': clamp, write the float back into the record, total unrounded.\"\"\"\n    v = float(record['value']) + float(record.get('bias', 0.0))\n    if v < 0:\n        v = 0.0\n    record['value'] = v\n    state['total'] = state['total'] + v\n    return {'i': index, 'kind': 'offset', 'value': round(v, 3),\n            'total': round(state['total'], 3)}\n\n\ndef _adjust_skip(state, index, record):\n    \"\"\"'skip': emits a row, never reads 'value', never moves the total.\"\"\"\n    return {'i': index, 'kind': 'skip', 'value': 0.0,\n            'total': round(state['total'], 3)}\n\n\nADJUSTERS = {\n    'raw': _adjust_raw,\n    'scaled': _adjust_scaled,\n    'offset': _adjust_offset,\n    'skip': _adjust_skip,\n}\n\n\n_UNKNOWN = object()\n\n\ndef adjust(readings):\n    out = []\n    append = out.append\n    state = {'total': 0.0}\n    for index, record in enumerate(readings):\n        kind = record.get('kind')\n        # Looked up in the module-level table on every record, so rebinding\n        # ADJUSTERS['skip'] changes what adjust does.  The try covers only the\n        # lookup, never the handler call, so a missing 'value' key still\n        # escapes as KeyError.\n        try:\n            handler = ADJUSTERS[kind]\n        except (KeyError, TypeError):\n            handler = _UNKNOWN\n        if handler is _UNKNOWN:\n            raise ValueError('unknown kind: %r' % (kind,))\n        append(handler(state, index, record))\n    return out\n```\n",
+   "chars": 2651
+  }
+ ]
+}

@@ -1,0 +1,85 @@
+Write a parser for a messy, line-oriented record format. Use only the Python standard library. Implement exactly one public function:
+
+    def parse_records(text):
+        ...
+        return records, errors
+
+It returns a 2-tuple `(records, errors)`:
+- `records` is a list of dicts, each having exactly the keys `'id'`, `'date'`, `'amount'`, `'note'`. Records appear in the order of the lines that produced them (see "Duplicate ids" for the one qualification).
+- `errors` is a list of `(line_number, code)` tuples, line numbers 1-based, ordered by increasing line number.
+
+If `text` is not an instance of `str`, raise `TypeError`. For any `str` input the function must never raise: every problem is reported through `errors`.
+
+## Per-line pipeline (apply in exactly this order)
+
+1. Split `text` into lines on `'\n'`. Line numbers are 1-based over that split. If a line ends with a single `'\r'`, remove that character before anything else.
+2. If the line is empty or contains only spaces and tabs, ignore it: it yields neither a record nor an error.
+3. If the first character that is not a space or tab is `'#'`, ignore the line the same way.
+4. Split the line into fields (see "Field scanning"). A scan failure gives code `BAD_QUOTE`.
+5. If the number of fields is not 3 or 4, code `FIELD_COUNT`.
+6. Field 0 is the `id`, taken exactly as the scanner produced it. If it is empty or consists only of spaces and tabs, code `BAD_ID`.
+7. Field 1 is the date. If it does not parse, code `BAD_DATE`.
+8. Field 2 is the amount. If it does not parse, code `BAD_AMOUNT`.
+9. Field 3, if present, is `note`, taken exactly as the scanner produced it. A note is never invalid. With only 3 fields, `note` is `''`.
+
+A line that fails any step is skipped: it contributes exactly one `(line_number, code)` entry to `errors` and no record. Checking stops at the first failing step, so a line with both an unparseable date and an unparseable amount reports `BAD_DATE` only, and a 2-field line reports `FIELD_COUNT` whatever else is wrong with it.
+
+The five codes are exactly the strings `'BAD_QUOTE'`, `'FIELD_COUNT'`, `'BAD_ID'`, `'BAD_DATE'`, `'BAD_AMOUNT'`.
+
+## Field scanning
+
+Fields are separated by top-level commas. Scan left to right:
+
+- At the start of each field, skip leading spaces and tabs.
+- If the next character is `"`, the field is quoted. Read characters until the next `"`. A `""` pair inside the quoted section means one literal `"` and the field continues. After the closing quote, skip spaces and tabs; the next character must then be a comma or the end of the line, otherwise the scan fails. Reaching the end of the line with no closing quote also fails. The value is exactly the text between the quotes, with no trimming of any kind.
+- Otherwise the field is unquoted: it runs to the next comma or the end of the line, and its value is that text with leading and trailing spaces and tabs removed.
+- A comma always begins a new field, so a line ending in a comma has an empty final field.
+
+Examples: `a,"b,c",d` gives `['a', 'b,c', 'd']`. `x,"say ""hi""" , 1` gives `['x', 'say "hi"', '1']`. `a,"b"x,c` is a scan failure. `a,"b,c` is a scan failure.
+
+## Dates
+
+Remove leading and trailing spaces and tabs from the field value first (this applies to quoted values too). The whole remaining value must match exactly one of these forms:
+
+- `YYYY-MM-DD`: exactly 4, then 2, then 2 digits.
+- `D/M/YYYY`: day and month of 1 or 2 digits each, year of exactly 4 digits.
+- `D Mon YYYY`: 1 or 2 digit day, one or more spaces, exactly three ASCII letters naming the month (`jan feb mar apr may jun jul aug sep oct nov dec`, any case), one or more spaces, exactly 4 digits. A full month name such as `March` is not accepted.
+
+A date is valid only if it is a real calendar date: year in 1000..9999, month in 1..12, day in 1..(length of that month), with 29 February allowed only in leap years (divisible by 4, except centuries not divisible by 400).
+
+Slash precedence: for `A/B/YYYY`, first try day = A, month = B. If that is a valid calendar date, use it. Otherwise try month = A, day = B; if that is valid, use it. Otherwise `BAD_DATE`. So `03/04/2021` is 3 April 2021, while `05/13/2021` is 13 May 2021.
+
+The record's `date` is the normalised zero-padded string `'YYYY-MM-DD'`.
+
+## Amounts
+
+Remove leading and trailing spaces and tabs from the field value, then apply these steps to the remaining text `s`:
+
+1. If `s` is empty, invalid.
+2. If `s` is at least 2 characters and begins with `(` and ends with `)`, it is parenthesised (meaning negative): remove both characters, then remove leading and trailing spaces and tabs from what is left. Otherwise, if `s` begins with `(` or ends with `)`, invalid.
+3. If `s` now begins with `+` or `-`, record the sign and remove that character. A sign together with parentheses is invalid.
+4. If `s` now begins with `$`, remove it.
+5. If `s` now ends with `%`, note that and remove it.
+6. What remains is the magnitude. It must be non-empty and contain only the characters `0`-`9`, `,` and `.`. Anything else, including any internal space, is invalid.
+
+Decide which of `,` and `.` is the decimal separator and which is the grouping separator:
+- Both present: the one whose last occurrence is further right is the decimal separator; the other is the grouping separator.
+- Only commas present: the comma is a grouping separator if every comma is immediately followed by exactly three digits that are themselves followed by another comma or the end of the magnitude; otherwise the comma is the decimal separator.
+- Only full stops present: the full stop is a grouping separator if there are two or more of them; if there is exactly one, it is the decimal separator.
+- Neither present: the magnitude is a plain integer.
+
+Then validate:
+- A decimal separator must occur exactly once, and the fractional part after it must be one or more digits with no separators in it.
+- With a grouping separator, the integer part must split on it into two or more groups: the first of 1 to 3 digits, every later group exactly 3 digits.
+- With no grouping separator, the integer part must be one or more digits.
+- Any violation is invalid.
+
+The value is the integer-part digits (grouping removed) joined with the fractional part. If a `%` was removed, divide by 100. If the amount was parenthesised or carried a `-`, negate it. The record's `amount` is a Python `float`, correct to within 1e-9 of the mathematical value.
+
+Worked examples: `"1,234.50"` is 1234.5; `"1.234,56"` is 1234.56; `1.234.567` is 1234567.0; `1.234` is 1.234; `"1,234"` is 1234.0; `"12,5"` is 12.5; `-$99` is -99.0; `"(1,234.50)"` is -1234.5; `12.5%` is 0.125; `-2%` is -0.02. Invalid: `.5`, `1.2.3`, `"1,23.45"`, `"1,234."`, `(-5)`, `$-99`, `(5`, `- 5`, `12abc`. (Note that an amount containing a comma has to be written as a quoted field, or the comma would split the record.)
+
+## Duplicate ids
+
+Records are keyed by `id`, compared as exact strings. If two or more accepted lines share an id, the output holds a single record for that id: its field values are those of the **last** such line, and it sits at the position of the **first** such line. Skipped lines take no part in this.
+
+Example: the lines `n1,2021-01-01,1` / `n2,2021-02-02,2,first` / `n1,2021-03-03,3,updated` produce two records, `n1` first (dated 2021-03-03, amount 3.0, note `updated`) and then `n2`.

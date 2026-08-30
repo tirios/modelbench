@@ -1,0 +1,156 @@
+```python
+import math
+import numpy as np
+from bisect import bisect_right
+
+
+def log_sum_exp(xs):
+    """Numerically stable log-sum-exp."""
+    # Convert to a list of floats for uniform handling
+    if isinstance(xs, np.ndarray):
+        vals = xs.tolist()
+    else:
+        vals = list(xs)
+
+    # Empty case
+    if len(vals) == 0:
+        return float('-inf')
+
+    # Validate: no NaN or +inf
+    for x in vals:
+        if math.isnan(x) or (math.isinf(x) and x > 0):
+            raise ValueError("xs contains NaN or +inf")
+
+    # Filter out -inf entries (they contribute 0 to the sum)
+    finite_vals = [x for x in vals if not (math.isinf(x) and x < 0)]
+
+    if len(finite_vals) == 0:
+        return float('-inf')
+
+    # Standard stable log-sum-exp: max + log(sum(exp(x - max)))
+    L = max(finite_vals)
+    total = sum(math.exp(x - L) for x in finite_vals)
+    return float(L + math.log(total))
+
+
+def weighted_quantile(values, log_weights, qs):
+    """Weighted quantiles with log-domain weights."""
+    # Convert inputs
+    if isinstance(values, np.ndarray):
+        values_list = values.tolist()
+    else:
+        values_list = list(values)
+
+    if isinstance(log_weights, np.ndarray):
+        lw_list = log_weights.tolist()
+    else:
+        lw_list = list(log_weights)
+
+    if isinstance(qs, np.ndarray):
+        qs_list = qs.tolist()
+    else:
+        qs_list = list(qs)
+
+    n = len(values_list)
+
+    # V1: length mismatch
+    if n != len(lw_list):
+        raise ValueError("len(values) != len(log_weights)")
+
+    # V2: values must be finite real numbers
+    for v in values_list:
+        if math.isnan(v) or math.isinf(v):
+            raise ValueError("values contains NaN, +inf or -inf")
+
+    # V3: log_weights must not contain NaN or +inf (-inf is OK)
+    for lw in lw_list:
+        if math.isnan(lw) or (math.isinf(lw) and lw > 0):
+            raise ValueError("log_weights contains NaN or +inf")
+
+    # V4: qs must be in [0, 1] and not NaN
+    for q in qs_list:
+        if math.isnan(q) or q < 0.0 or q > 1.0:
+            raise ValueError("qs contains NaN or value outside [0, 1]")
+
+    # A1: discard entries where log_weight == -inf
+    survivors = []
+    for i in range(n):
+        if not (math.isinf(lw_list[i]) and lw_list[i] < 0):
+            survivors.append((values_list[i], lw_list[i]))
+
+    # V5: if nothing left (or n == 0), raise
+    if len(survivors) == 0:
+        raise ValueError("all log weights are -inf or n == 0")
+
+    # If qs is empty, return []
+    if len(qs_list) == 0:
+        return []
+
+    # A2: L = max log weight, compute t_i = exp(lw_i - L), discard if t_i == 0
+    L = max(lw for _, lw in survivors)
+    weighted = []
+    for val, lw in survivors:
+        t = math.exp(lw - L)
+        if t != 0.0:
+            weighted.append((val, t))
+
+    # A3: normalise
+    Z = sum(t for _, t in weighted)
+    # w_i = t_i / Z
+    entries = [(val, t / Z) for val, t in weighted]
+
+    # A4: merge equal values
+    from collections import defaultdict
+    groups = defaultdict(float)
+    for val, w in entries:
+        groups[val] += w
+
+    distinct = sorted(groups.keys())
+    m = len(distinct)
+    u = distinct
+    v = [groups[uk] for uk in u]
+
+    # A5: single distinct value
+    if m == 1:
+        return [float(u[0])] * len(qs_list)
+
+    # A6: compute C_k, p_k, h_k
+    C = []
+    cumsum = 0.0
+    for k in range(m):
+        cumsum += v[k]
+        C.append(cumsum)
+
+    p = [C[k] - v[k] / 2.0 for k in range(m)]
+
+    p1 = p[0]
+    pm = p[m - 1]
+    denom = pm - p1  # >= 0.5 when m >= 2
+
+    h = [(p[k] - p1) / denom for k in range(m)]
+    # h[0] = 0, h[m-1] = 1, strictly increasing
+
+    # A7: for each q, find the interval via binary search
+    result = []
+    for q in qs_list:
+        if q <= 0.0:
+            result.append(float(u[0]))
+        elif q >= 1.0:
+            result.append(float(u[m - 1]))
+        else:
+            # Find k such that h[k] <= q <= h[k+1]
+            # bisect_right gives the index of the first h value > q
+            idx = bisect_right(h, q)
+            k = idx - 1
+            # Clamp just in case
+            if k < 0:
+                k = 0
+            if k >= m - 1:
+                k = m - 2
+            # Linear interpolation
+            frac = (q - h[k]) / (h[k + 1] - h[k])
+            val = u[k] + frac * (u[k + 1] - u[k])
+            result.append(float(val))
+
+    return result
+```

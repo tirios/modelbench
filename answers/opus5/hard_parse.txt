@@ -1,0 +1,273 @@
+```python
+import re
+from decimal import Decimal, localcontext
+
+_WS = ' \t'
+_DIGITS = frozenset('0123456789')
+
+_MONTHS = {
+    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+    'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
+}
+
+_ISO_RE = re.compile(r'([0-9]{4})-([0-9]{2})-([0-9]{2})')
+_SLASH_RE = re.compile(r'([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})')
+_TEXT_RE = re.compile(r'([0-9]{1,2}) +([A-Za-z]{3}) +([0-9]{4})')
+
+
+def _all_digits(s):
+    if not s:
+        return False
+    for ch in s:
+        if ch not in _DIGITS:
+            return False
+    return True
+
+
+def _scan_fields(line):
+    """Split a line on top-level commas. Returns a list of field values, or
+    None if the quoting is malformed."""
+    fields = []
+    i = 0
+    n = len(line)
+    while True:
+        while i < n and line[i] in _WS:
+            i += 1
+        if i < n and line[i] == '"':
+            i += 1
+            buf = []
+            closed = False
+            while i < n:
+                ch = line[i]
+                if ch == '"':
+                    if i + 1 < n and line[i + 1] == '"':
+                        buf.append('"')
+                        i += 2
+                    else:
+                        i += 1
+                        closed = True
+                        break
+                else:
+                    buf.append(ch)
+                    i += 1
+            if not closed:
+                return None
+            while i < n and line[i] in _WS:
+                i += 1
+            if i < n and line[i] != ',':
+                return None
+            fields.append(''.join(buf))
+        else:
+            j = i
+            while j < n and line[j] != ',':
+                j += 1
+            fields.append(line[i:j].strip(_WS))
+            i = j
+        if i >= n:
+            return fields
+        i += 1
+
+
+def _is_leap(year):
+    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+
+
+def _valid_ymd(year, month, day):
+    if year < 1000 or year > 9999:
+        return False
+    if month < 1 or month > 12:
+        return False
+    lengths = (31, 29 if _is_leap(year) else 28, 31, 30, 31, 30,
+               31, 31, 30, 31, 30, 31)
+    return 1 <= day <= lengths[month - 1]
+
+
+def _parse_date(raw):
+    """Return the normalised 'YYYY-MM-DD' string, or None if invalid."""
+    s = raw.strip(_WS)
+
+    m = _ISO_RE.fullmatch(s)
+    if m:
+        year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if _valid_ymd(year, month, day):
+            return '%04d-%02d-%02d' % (year, month, day)
+        return None
+
+    m = _SLASH_RE.fullmatch(s)
+    if m:
+        a, b, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        # day/month first, then month/day.
+        if _valid_ymd(year, b, a):
+            return '%04d-%02d-%02d' % (year, b, a)
+        if _valid_ymd(year, a, b):
+            return '%04d-%02d-%02d' % (year, a, b)
+        return None
+
+    m = _TEXT_RE.fullmatch(s)
+    if m:
+        day = int(m.group(1))
+        month = _MONTHS.get(m.group(2).lower())
+        year = int(m.group(3))
+        if month is not None and _valid_ymd(year, month, day):
+            return '%04d-%02d-%02d' % (year, month, day)
+        return None
+
+    return None
+
+
+def _commas_are_grouping(mag):
+    n = len(mag)
+    for i, ch in enumerate(mag):
+        if ch == ',':
+            seg = mag[i + 1:i + 4]
+            if len(seg) != 3 or not _all_digits(seg):
+                return False
+            j = i + 4
+            if j < n and mag[j] != ',':
+                return False
+    return True
+
+
+def _parse_amount(raw):
+    """Return the amount as a float, or None if invalid."""
+    s = raw.strip(_WS)
+    if not s:
+        return None
+
+    paren = False
+    if len(s) >= 2 and s[0] == '(' and s[-1] == ')':
+        paren = True
+        s = s[1:-1].strip(_WS)
+    elif s[0] == '(' or s[-1] == ')':
+        return None
+
+    negative = paren
+    if s and (s[0] == '+' or s[0] == '-'):
+        if paren:
+            return None
+        negative = (s[0] == '-')
+        s = s[1:]
+
+    if s[:1] == '$':
+        s = s[1:]
+
+    percent = False
+    if s[-1:] == '%':
+        percent = True
+        s = s[:-1]
+
+    mag = s
+    if not mag:
+        return None
+    for ch in mag:
+        if ch not in _DIGITS and ch != ',' and ch != '.':
+            return None
+
+    dec = None
+    grp = None
+    has_comma = ',' in mag
+    has_dot = '.' in mag
+    if has_comma and has_dot:
+        if mag.rfind(',') > mag.rfind('.'):
+            dec, grp = ',', '.'
+        else:
+            dec, grp = '.', ','
+    elif has_comma:
+        if _commas_are_grouping(mag):
+            grp = ','
+        else:
+            dec = ','
+    elif has_dot:
+        if mag.count('.') >= 2:
+            grp = '.'
+        else:
+            dec = '.'
+
+    if dec is not None:
+        if mag.count(dec) != 1:
+            return None
+        ipart, _, fpart = mag.partition(dec)
+        if not _all_digits(fpart):
+            return None
+    else:
+        ipart = mag
+        fpart = ''
+
+    if grp is not None:
+        groups = ipart.split(grp)
+        if len(groups) < 2:
+            return None
+        first = groups[0]
+        if not (1 <= len(first) <= 3) or not _all_digits(first):
+            return None
+        for g in groups[1:]:
+            if len(g) != 3 or not _all_digits(g):
+                return None
+        int_digits = ''.join(groups)
+    else:
+        if not _all_digits(ipart):
+            return None
+        int_digits = ipart
+
+    num = int_digits + '.' + fpart if fpart else int_digits
+    with localcontext() as ctx:
+        ctx.prec = 60
+        value = Decimal(num)
+        if percent:
+            value = value.scaleb(-2)
+        if negative:
+            value = -value
+        return float(value)
+
+
+def parse_records(text):
+    if not isinstance(text, str):
+        raise TypeError('text must be a str')
+
+    records = []
+    errors = []
+    position_of_id = {}
+
+    for lineno, raw_line in enumerate(text.split('\n'), 1):
+        line = raw_line[:-1] if raw_line.endswith('\r') else raw_line
+
+        if not line.strip(_WS):
+            continue
+        if line.lstrip(_WS)[0] == '#':
+            continue
+
+        fields = _scan_fields(line)
+        if fields is None:
+            errors.append((lineno, 'BAD_QUOTE'))
+            continue
+        if len(fields) not in (3, 4):
+            errors.append((lineno, 'FIELD_COUNT'))
+            continue
+
+        rid = fields[0]
+        if not rid.strip(_WS):
+            errors.append((lineno, 'BAD_ID'))
+            continue
+
+        date = _parse_date(fields[1])
+        if date is None:
+            errors.append((lineno, 'BAD_DATE'))
+            continue
+
+        amount = _parse_amount(fields[2])
+        if amount is None:
+            errors.append((lineno, 'BAD_AMOUNT'))
+            continue
+
+        note = fields[3] if len(fields) == 4 else ''
+        record = {'id': rid, 'date': date, 'amount': amount, 'note': note}
+
+        pos = position_of_id.get(rid)
+        if pos is None:
+            position_of_id[rid] = len(records)
+            records.append(record)
+        else:
+            records[pos] = record
+
+    return records, errors
+```

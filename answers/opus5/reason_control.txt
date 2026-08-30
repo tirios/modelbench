@@ -1,0 +1,17 @@
+The naive figure is the 0.008 m^2 fall in the changed-position group, but that group's run-to-run drop contains two things: the effect of the new position, and whatever makes drag area fall between run one and run two regardless of position. The second group is what measures the second thing. Those riders did not change position, yet their drag area still fell by 0.005 m^2, so 0.005 m^2 of movement is available from run order alone (warm-up, tyre and bearing warming, rider settling, balance or environmental drift, or a systematic first-run offset).
+
+The unchanged group therefore acts as the counterfactual for what the changed group would have done had they not repositioned. Differencing the two differences:
+
+  changed group:   -0.008 m^2
+  control group:   -0.005 m^2
+  difference:      -0.008 - (-0.005) = -0.003 m^2
+
+So the position change itself accounts for about a 0.003 m^2 reduction, roughly 40 per cent of the raw 0.008 m^2. Attributing the full 0.008 m^2 to the position would overstate its effect by about a factor of 2.7.
+
+Three caveats on that estimate, none of which the given figures can resolve:
+
+1. It rests on the parallel-trends assumption, that the run-one-to-run-two drift is the same in both groups. If riders who chose to change position were also the ones with more to gain from settling in, or were run in a different order or session, the 0.005 m^2 is the wrong subtraction.
+2. No standard deviations or standard errors are given, so 0.003 m^2 cannot be tested against noise. With forty riders per group and typical between-rider spread in drag area, a difference this small could easily sit inside the measurement and repeatability floor. It is a point estimate, not a demonstrated effect.
+3. Group assignment appears to be by rider choice rather than randomisation, so this is an observational contrast, and the estimate is the effect for those who chose to change, not for a rider drawn at random.
+
+ANSWER: -0.003 m^2 (a reduction of 0.003 m^2)

@@ -1,0 +1,15 @@
+```python
+import math
+
+def circular_mean(angles):
+    if not angles:
+        return 0.0
+
+    sin_sum = sum(math.sin(angle) for angle in angles)
+    cos_sum = sum(math.cos(angle) for angle in angles)
+
+    sin_mean = sin_sum / len(angles)
+    cos_mean = cos_sum / len(angles)
+
+    return math.atan2(sin_mean, cos_mean)
+```

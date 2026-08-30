@@ -1,0 +1,9 @@
+A 95 percent confidence interval for a mean difference is [-0.002, 0.014].
+Exactly one of the following statements is correct. Which one?
+
+(a) There is a 95 percent probability that the true difference lies in this interval.
+(b) The data are compatible with no difference at the 5 percent level.
+(c) The true difference is zero.
+(d) Collecting a larger sample would necessarily produce a narrower interval.
+
+Answer with the single letter.

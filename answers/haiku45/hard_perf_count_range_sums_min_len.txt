@@ -1,0 +1,35 @@
+```python
+from bisect import bisect_left, bisect_right, insort
+
+def count_range_sums(nums, lo, hi, min_len=1):
+    # Validation
+    if min_len < 1:
+        raise ValueError("min_len must be at least 1")
+
+    # Edge cases
+    if lo > hi or len(nums) == 0 or min_len > len(nums):
+        return 0
+
+    # Compute prefix sums
+    prefix = [0]
+    for num in nums:
+        prefix.append(prefix[-1] + num)
+
+    count = 0
+    eligible = []  # Sorted list of eligible prefix sums
+
+    for j in range(len(nums)):
+        # Add the prefix sum that just became eligible
+        if j - min_len + 1 >= 0:
+            insort(eligible, prefix[j - min_len + 1])
+
+        # Count how many eligible prefix sums fall in [target_lo, target_hi]
+        target_lo = prefix[j + 1] - hi
+        target_hi = prefix[j + 1] - lo
+
+        left_idx = bisect_left(eligible, target_lo)
+        right_idx = bisect_right(eligible, target_hi)
+        count += right_idx - left_idx
+
+    return count
+```

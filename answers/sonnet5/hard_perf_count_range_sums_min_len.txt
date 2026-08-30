@@ -1,0 +1,66 @@
+```python
+import bisect
+
+
+def count_range_sums(nums, lo, hi, min_len=1):
+    if min_len < 1:
+        raise ValueError("min_len must be >= 1")
+    if lo > hi:
+        return 0
+    n = len(nums)
+    if n == 0:
+        return 0
+    if min_len > n:
+        return 0
+
+    # prefix[k] = sum(nums[0:k]); sum(nums[i:j+1]) = prefix[j+1] - prefix[i]
+    prefix = [0] * (n + 1)
+    s = 0
+    for k in range(n):
+        s += nums[k]
+        prefix[k + 1] = s
+
+    # coordinate-compress the prefix values for the Fenwick tree
+    sorted_vals = sorted(set(prefix))
+    m = len(sorted_vals)
+
+    tree = [0] * (m + 1)
+
+    bisect_left = bisect.bisect_left
+    bisect_right = bisect.bisect_right
+
+    def update(i):
+        while i <= m:
+            tree[i] += 1
+            i += i & (-i)
+
+    def query(i):
+        total = 0
+        while i > 0:
+            total += tree[i]
+            i -= i & (-i)
+        return total
+
+    result = 0
+    next_l = 0
+    # For right endpoint r (1..n, representing j = r-1), a left endpoint l is
+    # eligible iff l <= r - min_len (subarray length (r-1)-l+1 >= min_len).
+    # Insert prefix[l] into the Fenwick tree only once it becomes eligible,
+    # then count how many inserted prefix values fall in
+    # [prefix[r]-hi, prefix[r]-lo].
+    for r in range(1, n + 1):
+        max_l = r - min_len
+        if max_l >= 0:
+            while next_l <= max_l:
+                rank = bisect_left(sorted_vals, prefix[next_l]) + 1
+                update(rank)
+                next_l += 1
+            pr = prefix[r]
+            A = pr - hi
+            B = pr - lo
+            hi_rank = bisect_right(sorted_vals, B)
+            lo_rank = bisect_left(sorted_vals, A)
+            result += query(hi_rank) - query(lo_rank)
+
+    return int(result)
+```

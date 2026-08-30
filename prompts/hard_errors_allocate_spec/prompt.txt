@@ -1,0 +1,69 @@
+Write pure Python (standard library only; numpy is available but not needed) defining one function `allocate` and six exception classes at module level. Everything stated below is required behaviour and is tested.
+
+## 1. Exception classes
+
+Define exactly these names, with exactly this inheritance:
+
+    SpecError(Exception)
+    SpecTypeError(SpecError, TypeError)
+    SpecSyntaxError(SpecError, ValueError)
+    SpecValueError(SpecError, ValueError)
+    DuplicateNameError(SpecValueError)
+    CapacityError(SpecError, ValueError)
+
+`SpecSyntaxError` and `SpecValueError` must be siblings: neither may be a subclass of the other. Constructor signatures and message text are up to you (the tests never read messages), but every instance raised by `allocate` must carry these attributes:
+
+  * `.index` on every raised exception: the 0-based position of the offending entry within `spec.split(',')`, or `None` when the failure is not tied to one entry.
+  * `.argname` on `SpecTypeError`: the string `'spec'` or `'capacity'`.
+  * `.name` on `DuplicateNameError`: the repeated name, after stripping.
+
+`allocate` must never let any other exception type escape: for any inputs whatsoever it either returns a dict or raises one of the six classes above.
+
+## 2. `allocate(spec, capacity)`
+
+Distributes `capacity` indivisible units among named claimants in proportion to weights given by `spec`. Two positional arguments, in that order.
+
+### 2.1 Validation order
+
+Perform these in exactly this order; the first failure is the one raised.
+
+1. If `spec` is not an instance of `str`: raise `SpecTypeError` with `.argname == 'spec'` and `.index is None`.
+2. If `capacity` is a `bool`, or is not an instance of `int`: raise `SpecTypeError` with `.argname == 'capacity'` and `.index is None`. (`bool` is rejected even though it subclasses `int`, so `True` and `False` are both errors; `5.0` is an error.)
+3. If `capacity < 0`: raise `CapacityError` with `.index is None`. This happens before any parsing, including before the empty-spec shortcut in 2.2, so `allocate('', -1)` raises `CapacityError`.
+4. Then parse entries as in 2.3.
+
+### 2.2 Empty spec
+
+If `spec.strip()` is the empty string, return `{}`. No error is possible for any non-negative capacity.
+
+### 2.3 Entry parsing
+
+Otherwise split the original `spec` on `','` and process entries strictly left to right, index 0 first. All checks for entry *i* complete before entry *i+1* is looked at, so the first entry with any problem determines what is raised. Within one entry the checks run in this order and the first one that fails is the one raised:
+
+  a. The entry must contain exactly one `'='` (`entry.count('=') == 1`), else `SpecSyntaxError`. An empty entry has none, so a leading, trailing or doubled comma is a syntax error (`'a=1,'` raises at index 1, `',a=1'` at index 0, `'a=1,,b=1'` at index 1). `'a=1=2'` is also a syntax error.
+  b. Split on `'='` and strip whitespace from both halves. The name half must match the regular expression `[A-Za-z_][A-Za-z0-9_]*` **in full**, ASCII only, else `SpecSyntaxError`. So `'_x9'` is valid, while `''`, `'1a'`, `'a b'`, `'a-b'`, `'é'` and `'aé'` are all invalid. (Do not use `str.isidentifier()` or `\w`: both accept non-ASCII letters.)
+  c. The weight half must be parseable by the built-in `float()`; if `float()` raises `ValueError`, raise `SpecSyntaxError`. So `'a='` and `'a=zzz'` are syntax errors.
+  d. The parsed weight must be finite: NaN and ±infinity raise `SpecValueError`. Note that `'nan'`, `'NaN'`, `'inf'` and `'-inf'` all parse fine under `float()`, so these are value errors, not syntax errors.
+  e. The parsed weight must not be negative (`w < 0` raises `SpecValueError`). Negative zero is not negative: `'a=-0'` and `'a=-0.0'` are accepted and count as weight 0.
+  f. The name must not equal a name accepted from an earlier entry, else `DuplicateNameError` (with `.name` set). Because f is last, `'a=1,a=-5'` raises a `SpecValueError` that is **not** a `DuplicateNameError`, and `'a=1,a=xyz'` raises `SpecSyntaxError`, while `'a=1,a=2'` raises `DuplicateNameError` with `.index == 1`.
+
+Every entry-level error carries `.index` equal to that entry's index in `spec.split(',')`.
+
+### 2.4 Result
+
+Let the accepted entries be `n_0 .. n_{k-1}` in order of appearance with weights `w_i`, and `S = sum(w_i)`.
+
+  * If `S == 0` (every weight is zero), return `{n_i: 0}` for all i. No error. Apart from this case and the empty-spec case of 2.2, the returned values always sum to exactly `capacity`.
+  * Otherwise use largest-remainder apportionment:
+
+        q_i    = capacity * w_i / S
+        base_i = floor(q_i)
+        r      = capacity - sum(base_i)
+
+    then add one extra unit to each of the `r` entries with the largest fractional part `q_i - base_i`, ties broken by smaller index (earlier in the spec, never by name).
+
+These quantities must be computed **exactly**, with rational or integer arithmetic on the exact binary values of the parsed floats (e.g. `fractions.Fraction(w)` or `float.as_integer_ratio()`), not in floating point. The result must not depend on floating-point rounding or on summation order, and whenever `S > 0` the returned values must sum to exactly `capacity`. With exact arithmetic `0 <= r < k` always holds; a floating-point implementation can instead produce a negative `r`, after which the returned values no longer sum to `capacity`. For example, on `allocate('a=1e16,b=1', 10**17)` the float sum rounds `1e16 + 1` back to `1e16`, the bases sum to 10 more than `capacity`, `r` comes out as `-10`, and the result over-allocates. The correct answer there is `{'a': 99999999999999990, 'b': 10}`.
+
+Return a `dict` mapping name -> units, keys in order of first appearance in the spec, every value a plain Python `int` (not a float, not a numpy integer). Names with weight 0 still appear, with value 0. `capacity == 0` is legal and returns all zeros.
+
+Efficiency: stay near O(k log k) in the number of entries; the function is exercised with several thousand entries.

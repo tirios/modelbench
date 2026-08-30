@@ -1,0 +1,233 @@
+```python
+import math
+from bisect import bisect_left, insort
+from collections import deque
+
+
+class SlidingWindow:
+    """A fixed-capacity FIFO window with running order statistics.
+
+    Insertion order is kept in a deque; a second view of the same values is
+    kept as a list of sorted blocks (a sorted multiset with indexed access),
+    which gives cheap median / min / max without re-sorting on every call.
+
+    mean() and variance() are recomputed from the current contents with
+    math.fsum and the corrected two-pass formula, so no error accumulates
+    across updates or evictions.
+    """
+
+    _MIN_LOAD = 128
+    _MAX_LOAD = 4096
+
+    # ------------------------------------------------------------------
+    # construction and validation
+    # ------------------------------------------------------------------
+
+    def __init__(self, capacity):
+        capacity = self._validate_capacity(capacity)
+        self._capacity = capacity
+        self._data = deque()          # values in insertion order, oldest first
+        self._load = self._load_for(capacity)
+        self._blocks = []             # list of sorted lists; concatenation is sorted
+        self._maxes = []              # last element of each block
+
+    @classmethod
+    def _validate_capacity(cls, capacity):
+        if not isinstance(capacity, int):
+            raise ValueError("capacity must be an int, got %r" % (capacity,))
+        capacity = int(capacity)      # normalises bool
+        if capacity < 1:
+            raise ValueError("capacity must be >= 1, got %d" % (capacity,))
+        return capacity
+
+    @classmethod
+    def _load_for(cls, capacity):
+        load = math.isqrt(capacity) * 8
+        if load < cls._MIN_LOAD:
+            load = cls._MIN_LOAD
+        elif load > cls._MAX_LOAD:
+            load = cls._MAX_LOAD
+        return load
+
+    @staticmethod
+    def _validate_value(x):
+        if isinstance(x, float):
+            value = x
+        elif isinstance(x, int):
+            try:
+                value = float(x)
+            except (OverflowError, ValueError):
+                raise ValueError("value must be a finite real number") from None
+        else:
+            raise ValueError("value must be an int or a float, got %r" % (type(x),))
+        if not math.isfinite(value):
+            raise ValueError("value must be finite, got %r" % (x,))
+        return value
+
+    # ------------------------------------------------------------------
+    # sorted-multiset internals
+    # ------------------------------------------------------------------
+
+    def _index_add(self, value):
+        blocks = self._blocks
+        maxes = self._maxes
+        if not blocks:
+            blocks.append([value])
+            maxes.append(value)
+            return
+        i = bisect_left(maxes, value)
+        if i == len(maxes):
+            i -= 1                     # larger than everything: goes in the last block
+        block = blocks[i]
+        insort(block, value)
+        maxes[i] = block[-1]
+        load = self._load
+        if len(block) > (load << 1):   # split an oversized block
+            tail = block[load:]
+            del block[load:]
+            blocks.insert(i + 1, tail)
+            maxes[i] = block[-1]
+            maxes.insert(i + 1, tail[-1])
+
+    def _index_remove(self, value):
+        blocks = self._blocks
+        maxes = self._maxes
+        i = bisect_left(maxes, value)
+        # Every earlier block has a maximum < value, so if value is present at
+        # all it is in block i.
+        block = blocks[i]
+        j = bisect_left(block, value)
+        del block[j]
+        if block:
+            maxes[i] = block[-1]
+        else:
+            del blocks[i]
+            del maxes[i]
+        count = len(blocks)
+        # Keep the block count proportional to the size: without this, long
+        # runs of removals can leave many sparse blocks and slow the walk in
+        # _index_kth. The rebuild is O(n) and can only fire after about half
+        # the elements have gone, so it is amortised O(1) per removal.
+        if count > 8 and 2 * len(self._data) < count * self._load:
+            self._index_rebuild()
+
+    def _index_rebuild(self):
+        load = self._load
+        values = [v for block in self._blocks for v in block]  # already sorted
+        self._blocks = [values[k:k + load] for k in range(0, len(values), load)]
+        self._maxes = [block[-1] for block in self._blocks]
+
+    def _index_kth(self, k):
+        """The k-th smallest current value, 0-based."""
+        for block in self._blocks:
+            size = len(block)
+            if k < size:
+                return block[k]
+            k -= size
+        raise IndexError(k)
+
+    # ------------------------------------------------------------------
+    # public API
+    # ------------------------------------------------------------------
+
+    @property
+    def capacity(self):
+        return self._capacity
+
+    def __len__(self):
+        return len(self._data)
+
+    def push(self, x):
+        value = self._validate_value(x)   # validate before touching any state
+        evicted = None
+        if len(self._data) >= self._capacity:
+            evicted = self._data.popleft()
+            self._index_remove(evicted)
+        self._data.append(value)
+        self._index_add(value)
+        return evicted
+
+    def snapshot(self):
+        return list(self._data)
+
+    def mean(self):
+        n = len(self._data)
+        if n == 0:
+            return None
+        return math.fsum(self._data) / n
+
+    def variance(self):
+        data = self._data
+        n = len(data)
+        if n < 2:
+            return None
+        # Corrected two-pass algorithm. fsum is exactly rounded, and for
+        # tightly clustered large values each deviation v - mean is itself
+        # exact (Sterbenz), so the relative error stays near machine epsilon
+        # even at 1e9 with a spread of 1.
+        mean = math.fsum(data) / n
+        devs = [v - mean for v in data]
+        amax = 0.0
+        for d in devs:
+            a = -d if d < 0.0 else d
+            if a > amax:
+                amax = a
+        scale = 1.0
+        if amax > 0.0:
+            exponent = math.frexp(amax)[1]
+            if exponent > 480 or exponent < -480:
+                # Power-of-two rescale, so the division is exact; only guards
+                # squaring against overflow/underflow.
+                scale = math.ldexp(1.0, exponent)
+                devs = [d / scale for d in devs]
+        sum_sq = math.fsum([d * d for d in devs])
+        total = math.fsum(devs)
+        var = (sum_sq - total * total / n) / (n - 1)
+        if var < 0.0:
+            var = 0.0
+        if scale != 1.0:
+            var = var * scale * scale
+        return var
+
+    def median(self):
+        n = len(self._data)
+        if n == 0:
+            return None
+        k = n >> 1
+        if n & 1:
+            return self._index_kth(k)
+        lower = self._index_kth(k - 1)
+        upper = self._index_kth(k)
+        return lower * 0.5 + upper * 0.5   # halving first avoids overflow
+
+    def min(self):
+        if not self._data:
+            return None
+        return self._blocks[0][0]
+
+    def max(self):
+        if not self._data:
+            return None
+        return self._blocks[-1][-1]
+
+    def resize(self, new_capacity):
+        new_capacity = self._validate_capacity(new_capacity)
+        evicted = []
+        data = self._data
+        while len(data) > new_capacity:
+            value = data.popleft()
+            self._index_remove(value)
+            evicted.append(value)
+        self._capacity = new_capacity
+        load = self._load_for(new_capacity)
+        if load != self._load:
+            self._load = load
+            self._index_rebuild()
+        return evicted
+
+    def clear(self):
+        self._data.clear()
+        self._blocks = []
+        self._maxes = []
+        return None
+```

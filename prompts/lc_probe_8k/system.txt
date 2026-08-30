@@ -1,0 +1,1 @@
+You are being evaluated on a benchmark. Answer using ONLY the document supplied. Give three answers, each on its own line, labelled exactly A1:, A2: and A3:. Keep each answer to one short sentence or a bare number. If the document does not contain an answer, say plainly that it is not stated rather than guessing.

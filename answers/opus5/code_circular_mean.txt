@@ -1,0 +1,30 @@
+```python
+import math
+
+
+def circular_mean(angles):
+    """Return the circular (directional) mean of `angles` (radians) in (-pi, pi]."""
+    n = len(angles)
+    if n == 0:
+        return 0.0
+
+    sin_sum = 0.0
+    cos_sum = 0.0
+    for a in angles:
+        sin_sum += math.sin(a)
+        cos_sum += math.cos(a)
+
+    mean_sin = sin_sum / n
+    mean_cos = cos_sum / n
+
+    result = math.atan2(mean_sin, mean_cos)
+
+    # atan2 returns [-pi, pi]; map the -pi endpoint onto +pi so the
+    # result lies in (-pi, pi]. This also normalises the -0.0 case.
+    if result == -math.pi:
+        return math.pi
+    if result == 0.0:
+        return 0.0
+
+    return result
+```

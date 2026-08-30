@@ -1,0 +1,59 @@
+```python
+def parse(lines):
+    result = []
+    for line in lines:
+        # Skip blank lines
+        if not line or not line.strip():
+            continue
+
+        parts = line.split()
+        if len(parts) < 5:
+            continue
+
+        ts = parts[0]
+
+        # Parse key=value pairs from remaining parts
+        kv = {}
+        valid = True
+        for part in parts[1:]:
+            if '=' not in part:
+                valid = False
+                break
+            key, value = part.split('=', 1)
+            kv[key] = value
+
+        if not valid:
+            continue
+
+        # Check we have exactly the required keys
+        if set(kv.keys()) != {'run', 'ch', 'val', 'flag'}:
+            continue
+
+        # Validate and convert types
+        try:
+            run_val = int(kv['run'])
+        except (ValueError, TypeError):
+            continue
+
+        # val is either a float or the literal string 'nan'
+        if kv['val'] == 'nan':
+            val_val = None
+        else:
+            try:
+                val_val = float(kv['val'])
+            except (ValueError, TypeError):
+                continue
+
+        ch_val = kv['ch']
+        flag_val = kv['flag']
+
+        result.append({
+            'ts': ts,
+            'run': run_val,
+            'ch': ch_val,
+            'val': val_val,
+            'flag': flag_val
+        })
+
+    return result
+```

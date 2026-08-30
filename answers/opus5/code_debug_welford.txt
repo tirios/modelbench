@@ -1,0 +1,17 @@
+The bug is in the `M2` update: `delta * (x - mean)` uses the *old* mean for both factors, so it accumulates `sum((x - mean_old)**2)` instead of Welford's `sum(delta_old * delta_new)`. In Welford's algorithm the mean must be updated first, and `M2` accumulated as `delta * delta2` where `delta` uses the old mean and `delta2` uses the new mean. The original also raises `ZeroDivisionError` on an empty or single-element input.
+
+```python
+def running_var(xs):
+    n = 0
+    mean = 0.0
+    M2 = 0.0
+    for x in xs:
+        n += 1
+        delta = x - mean
+        mean += delta / n
+        delta2 = x - mean
+        M2 += delta * delta2
+    if n < 2:
+        return 0.0
+    return M2 / (n - 1)
+```

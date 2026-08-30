@@ -1,0 +1,15 @@
+Write ONE task-board line, as a single paragraph of continuous prose,
+about standardising the run-naming convention and re-analysing the legacy runs
+that predate it.
+
+Hard requirements, all of which will be checked mechanically:
+  - Between 45 and 70 words.
+  - Australian English spelling throughout.
+  - No em dashes anywhere.
+  - No emoji.
+  - Do not use the word "leverage" or the word "robust".
+  - It must state who is responsible, what the action is, and why it matters,
+    so that it makes sense read cold months later with no memory of this request.
+  - The very last characters of your reply must be the tag #phd
+
+Output only the line itself. No preamble, no heading, no explanation.

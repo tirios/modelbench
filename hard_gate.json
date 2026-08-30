@@ -1,0 +1,14 @@
+{
+ "usable": [
+  "hard_algo",
+  "hard_class_sliding_window",
+  "hard_debug_rolling_mean_window",
+  "hard_errors_allocate_spec",
+  "hard_numeric_log_domain_weighted_quantile",
+  "hard_parse",
+  "hard_perf_count_range_sums_min_len",
+  "hard_refactor"
+ ],
+ "broken": [],
+ "blunt": []
+}

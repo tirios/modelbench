@@ -1,0 +1,78 @@
+```python
+"""Behaviour-preserving refactor of ``legacy_adjust``.
+
+The four branches disagree with one another on purpose: only ``'raw'`` and
+``'offset'`` clamp negatives, ``'scaled'`` rounds to 2 dp and feeds the
+*rounded* value into the running total, ``'offset'`` writes back into the
+input record, and ``'skip'`` never touches the total.  Each quirk lives in
+its own handler and is preserved exactly; the only change is that the row
+list is appended to instead of rebuilt, making ``adjust`` linear.
+"""
+
+
+def _adjust_raw(state, index, record):
+    """'raw': clamp negatives, row rounded to 3 dp, UNROUNDED value totalled."""
+    v = float(record['value'])
+    if v < 0:
+        v = 0.0
+    state['total'] = state['total'] + v
+    return {'i': index, 'kind': 'raw', 'value': round(v, 3),
+            'total': round(state['total'], 3)}
+
+
+def _adjust_scaled(state, index, record):
+    """'scaled': no clamp, 2 dp, and the ROUNDED value is what is totalled."""
+    v = float(record['value']) * float(record.get('gain', 1.0))
+    v = round(v, 2)
+    state['total'] = state['total'] + v
+    return {'i': index, 'kind': 'scaled', 'value': v,
+            'total': round(state['total'], 3)}
+
+
+def _adjust_offset(state, index, record):
+    """'offset': clamp, write the float back into the record, total unrounded."""
+    v = float(record['value']) + float(record.get('bias', 0.0))
+    if v < 0:
+        v = 0.0
+    record['value'] = v
+    state['total'] = state['total'] + v
+    return {'i': index, 'kind': 'offset', 'value': round(v, 3),
+            'total': round(state['total'], 3)}
+
+
+def _adjust_skip(state, index, record):
+    """'skip': emits a row, never reads 'value', never moves the total."""
+    return {'i': index, 'kind': 'skip', 'value': 0.0,
+            'total': round(state['total'], 3)}
+
+
+ADJUSTERS = {
+    'raw': _adjust_raw,
+    'scaled': _adjust_scaled,
+    'offset': _adjust_offset,
+    'skip': _adjust_skip,
+}
+
+
+_UNKNOWN = object()
+
+
+def adjust(readings):
+    out = []
+    append = out.append
+    state = {'total': 0.0}
+    for index, record in enumerate(readings):
+        kind = record.get('kind')
+        # Looked up in the module-level table on every record, so rebinding
+        # ADJUSTERS['skip'] changes what adjust does.  The try covers only the
+        # lookup, never the handler call, so a missing 'value' key still
+        # escapes as KeyError.
+        try:
+            handler = ADJUSTERS[kind]
+        except (KeyError, TypeError):
+            handler = _UNKNOWN
+        if handler is _UNKNOWN:
+            raise ValueError('unknown kind: %r' % (kind,))
+        append(handler(state, index, record))
+    return out
+```

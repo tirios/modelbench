@@ -1,0 +1,19 @@
+The function below is meant to compute the SAMPLE variance (dividing by n-1)
+of a sequence in a single pass using Welford's algorithm. It returns wrong values.
+
+```python
+def running_var(xs):
+    n = 0
+    mean = 0.0
+    M2 = 0.0
+    for x in xs:
+        n += 1
+        delta = x - mean
+        M2 += delta * (x - mean)
+        mean += delta / n
+    return M2 / (n - 1)
+```
+
+Return a corrected version of `running_var` with the same name and signature.
+It must return the sample variance, and must return 0.0 when the input has
+fewer than two elements.

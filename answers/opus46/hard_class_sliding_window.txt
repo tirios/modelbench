@@ -1,0 +1,88 @@
+```python
+import math
+import bisect
+from collections import deque
+
+
+class SlidingWindow:
+    def __init__(self, capacity):
+        if isinstance(capacity, bool) or not isinstance(capacity, int) or capacity < 1:
+            raise ValueError("capacity must be a positive int")
+        self._capacity = capacity
+        self._queue = deque()
+        self._sorted = []
+
+    @property
+    def capacity(self):
+        return self._capacity
+
+    def __len__(self):
+        return len(self._queue)
+
+    def push(self, x):
+        if isinstance(x, bool) or not isinstance(x, (int, float)):
+            raise ValueError("x must be int or float")
+        if math.isnan(x) or math.isinf(x):
+            raise ValueError("x must be finite")
+        x = float(x)
+        evicted = None
+        if len(self._queue) >= self._capacity:
+            evicted = self._queue.popleft()
+            idx = bisect.bisect_left(self._sorted, evicted)
+            self._sorted.pop(idx)
+        self._queue.append(x)
+        bisect.insort(self._sorted, x)
+        return evicted
+
+    def snapshot(self):
+        return list(self._queue)
+
+    def mean(self):
+        n = len(self._queue)
+        if n == 0:
+            return None
+        return math.fsum(self._queue) / n
+
+    def variance(self):
+        n = len(self._queue)
+        if n < 2:
+            return None
+        m = math.fsum(self._queue) / n
+        return math.fsum((v - m) ** 2 for v in self._queue) / (n - 1)
+
+    def median(self):
+        n = len(self._sorted)
+        if n == 0:
+            return None
+        mid = n // 2
+        if n % 2 == 1:
+            return float(self._sorted[mid])
+        return (self._sorted[mid - 1] + self._sorted[mid]) / 2.0
+
+    def min(self):
+        if not self._sorted:
+            return None
+        return float(self._sorted[0])
+
+    def max(self):
+        if not self._sorted:
+            return None
+        return float(self._sorted[-1])
+
+    def resize(self, new_capacity):
+        if isinstance(new_capacity, bool) or not isinstance(new_capacity, int) or new_capacity < 1:
+            raise ValueError("new_capacity must be a positive int")
+        evicted = []
+        while len(self._queue) > new_capacity:
+            val = self._queue.popleft()
+            idx = bisect.bisect_left(self._sorted, val)
+            self._sorted.pop(idx)
+            evicted.append(val)
+        self._capacity = new_capacity
+        return evicted
+
+    def clear(self):
+        self._queue.clear()
+        self._sorted.clear()
+        return None
+```

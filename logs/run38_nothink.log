@@ -1,0 +1,12 @@
+ overrides: effort=none budget=12000
+[1/9] code_parse_log ... score 1.00 422 tok @ 98.0 tok/s ttft 0.771s think 0c (6/6 checks)
+[2/9] hard_algo ... score 0.31 5423 tok @ 87.68 tok/s ttft 0.561s think 0c (4/13 checks | single_interval: AssertionErro)
+[3/9] hard_class_sliding_window ... score 0.54 1760 tok @ 88.97 tok/s ttft 1.084s think 0c (7/13 checks | basic_stats: AttributeError: ')
+[4/9] hard_debug_rolling_mean_window ... score 0.92 932 tok @ 86.57 tok/s ttft 1.146s think 0c (11/12 checks | stability: AssertionError: a )
+[5/9] hard_errors_allocate_spec ... score 1.00 1099 tok @ 90.95 tok/s ttft 1.538s think 0c (14/14 checks)
+[6/9] hard_numeric_log_domain_weighted_quantile ... score 1.00 1775 tok @ 86.55 tok/s ttft 1.871s think 0c (14/14 checks)
+[7/9] hard_parse ... score 0.93 2731 tok @ 91.16 tok/s ttft 1.677s think 0c (13/14 checks | amount_signs_and_parens: Asse)
+[8/9] hard_perf_count_range_sums_min_len ... score 1.00 1467 tok @ 87.97 tok/s ttft 1.192s think 0c (13/13 checks)
+[9/9] hard_refactor ... score 1.00 447 tok @ 95.77 tok/s ttft 1.658s think 0c (14/14 checks)
+
+9/9 completed, mean score 0.855, wall 197s -> results_nothink_qwen38.json

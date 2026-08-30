@@ -1,0 +1,127 @@
+```python
+import math
+import re
+
+_NAME_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+
+
+class SpecError(Exception):
+    """Base class for every error raised by ``allocate``."""
+
+    def __init__(self, message="spec error", index=None):
+        super().__init__(message)
+        self.index = index
+
+
+class SpecTypeError(SpecError, TypeError):
+    """An argument had the wrong type."""
+
+    def __init__(self, message="bad argument type", index=None, argname=None):
+        SpecError.__init__(self, message, index)
+        self.argname = argname
+
+
+class SpecSyntaxError(SpecError, ValueError):
+    """An entry could not be parsed."""
+
+
+class SpecValueError(SpecError, ValueError):
+    """An entry parsed, but its value is not usable."""
+
+
+class DuplicateNameError(SpecValueError):
+    """A claimant name was repeated."""
+
+    def __init__(self, message="repeated name", index=None, name=None):
+        SpecValueError.__init__(self, message, index)
+        self.name = name
+
+
+class CapacityError(SpecError, ValueError):
+    """The capacity is not a usable count of units."""
+
+
+def allocate(spec, capacity):
+    """Distribute ``capacity`` indivisible units among the claimants in ``spec``.
+
+    ``spec`` is a comma separated list of ``name=weight`` entries.  Units are
+    apportioned in proportion to the weights by the largest remainder method,
+    computed in exact integer arithmetic so the result never depends on
+    floating point rounding or on summation order.
+    """
+    try:
+        # --- 1. argument validation, in the prescribed order -------------
+        if not isinstance(spec, str):
+            raise SpecTypeError("spec must be a str", index=None,
+                                argname='spec')
+        if isinstance(capacity, bool) or not isinstance(capacity, int):
+            raise SpecTypeError("capacity must be an int", index=None,
+                                argname='capacity')
+        if capacity < 0:
+            raise CapacityError("capacity must not be negative", index=None)
+        capacity = int(capacity)  # normalise any int subclass
+
+        # --- 2. empty spec ----------------------------------------------
+        if not spec.strip():
+            return {}
+
+        # --- 3. entry parsing, strictly left to right -------------------
+        names = []
+        nums = []
+        dens = []
+        seen = set()
+        for i, entry in enumerate(spec.split(',')):
+            if entry.count('=') != 1:
+                raise SpecSyntaxError("entry needs exactly one '='", index=i)
+            raw_name, raw_weight = entry.split('=')
+            name = raw_name.strip()
+            if _NAME_RE.fullmatch(name) is None:
+                raise SpecSyntaxError("invalid claimant name", index=i)
+            try:
+                weight = float(raw_weight.strip())
+            except ValueError:
+                raise SpecSyntaxError("unparseable weight", index=i) from None
+            if math.isnan(weight) or math.isinf(weight):
+                raise SpecValueError("weight must be finite", index=i)
+            if weight < 0.0:
+                raise SpecValueError("weight must not be negative", index=i)
+            if name in seen:
+                raise DuplicateNameError("repeated name", index=i, name=name)
+            seen.add(name)
+            num, den = weight.as_integer_ratio()
+            names.append(name)
+            nums.append(num)
+            dens.append(den)
+
+        # --- 4. exact apportionment -------------------------------------
+        # Every float's exact value is num/den with den a power of two, so a
+        # single common denominator turns the weights into exact integers.
+        k = len(names)
+        common = max(dens)
+        scaled = [num * (common // den) for num, den in zip(nums, dens)]
+        total_weight = sum(scaled)
+        if total_weight == 0:
+            return dict.fromkeys(names, 0)
+
+        # q_i = capacity * w_i / S = capacity * scaled_i / total_weight.
+        # The remainders share the denominator total_weight, so comparing
+        # them directly compares the fractional parts of q_i.
+        base = []
+        remainder = []
+        allocated = 0
+        for w in scaled:
+            b, rem = divmod(capacity * w, total_weight)
+            base.append(b)
+            remainder.append(rem)
+            allocated += b
+        extra = capacity - allocated
+        if extra > 0:
+            order = sorted(range(k), key=lambda i: (-remainder[i], i))
+            for i in order[:extra]:
+                base[i] += 1
+        return {names[i]: int(base[i]) for i in range(k)}
+    except SpecError:
+        raise
+    except Exception as exc:  # nothing but the six classes may escape
+        raise SpecError("unexpected internal failure", index=None) from exc
+```

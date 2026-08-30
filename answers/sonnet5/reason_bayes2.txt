@@ -1,0 +1,15 @@
+P(D+) = 0.02, P(D-) = 0.98
+
+Test A: P(A+|D+) = 0.95, P(A+|D-) = 1 - 0.90 = 0.10
+Test B: P(B+|D+) = 0.80, P(B+|D-) = 1 - 0.97 = 0.03
+
+Conditional independence given true status:
+P(A+,B+|D+) = 0.95 * 0.80 = 0.76
+P(A+,B+|D-) = 0.10 * 0.03 = 0.003
+
+Numerator = P(D+) * P(A+,B+|D+) = 0.02 * 0.76 = 0.0152
+Denominator = Numerator + P(D-) * P(A+,B+|D-) = 0.0152 + 0.98 * 0.003 = 0.0152 + 0.00294 = 0.01814
+
+P(D+ | A+,B+) = 0.0152 / 0.01814 = 760/907 ≈ 0.837928
+
+ANSWER: 0.838
